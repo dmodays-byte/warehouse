@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EnergoWheel CRM</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--bg2:#161B25;--bg3:#1E2533;--bg4:#242C3D;
+  --accent:#00C896;--accent2:#0099FF;--accent3:#FF6B35;
+  --border:#2A3347;--text:#E8EDF5;--text2:#8A96AA;--text3:#5A6478;
+  --red:#FF4D4D;--amber:#FFB020;--green:#00C896;
+  --font:'Segoe UI',system-ui,sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);font-size:13px;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:0;width:220px;height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
+.logo{padding:20px 18px;border-bottom:1px solid var(--border)}
+.logo-mark{font-size:18px;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.nav{padding:12px 8px;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;margin-bottom:2px;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--bg3);color:var(--text)}
+.nav-item.active{background:linear-gradient(90deg,rgba(0,200,150,.15),transparent);color:var(--accent);border-left:2px solid var(--accent);padding-left:10px}
+.nav-icon{width:18px;text-align:center;flex-shrink:0}
+.nav-section{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:12px 12px 4px}
+.sidebar-footer{padding:14px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)}
+
+/* MAIN */
+.main{margin-left:220px;min-height:100vh}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:16px;font-weight:700;color:var(--text)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.badge-count{background:var(--accent);color:#000;font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px}
+.content{padding:24px}
+
+/* PAGE */
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.metric-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden}
+.metric-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--accent-color,var(--accent))}
+.metric-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.metric-val{font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* TABLE */
+.table-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.table-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.table-title{font-size:14px;font-weight:700}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+thead th{background:var(--bg3);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;font-weight:600;white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--accent);color:#000}
+.btn-primary:hover{background:#00e8ae}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:6px}
+.btn-danger{background:rgba(255,77,77,.15);border:1px solid rgba(255,77,77,.3);color:var(--red)}
+.btn-amber{background:rgba(255,176,32,.15);border:1px solid rgba(255,176,32,.3);color:var(--amber)}
+.btn-blue{background:rgba(0,153,255,.15);border:1px solid rgba(0,153,255,.3);color:var(--accent2)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap}
+.badge-green{background:rgba(0,200,150,.15);color:var(--green)}
+.badge-red{background:rgba(255,77,77,.15);color:var(--red)}
+.badge-amber{background:rgba(255,176,32,.15);color:var(--amber)}
+.badge-blue{background:rgba(0,153,255,.15);color:var(--accent2)}
+.badge-gray{background:var(--bg3);color:var(--text3)}
+
+/* FORMS / MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.overlay.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:24px;width:480px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.modal-title{font-size:16px;font-weight:800}
+.close-btn{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:4px}
+.close-btn:hover{color:var(--text)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;font-weight:600}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;font-family:var(--font);transition:border .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:70px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.search-input{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);font-size:13px;font-family:var(--font);flex:1;min-width:180px}
+.search-input:focus{outline:none;border-color:var(--accent)}
+.filter-select{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font)}
+.filter-select:focus{outline:none;border-color:var(--accent)}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kanban-col{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.kanban-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.kanban-hdr-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.kanban-count{background:var(--bg3);color:var(--text3);font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px}
+.kanban-body{padding:10px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.kanban-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all .15s}
+.kanban-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.kanban-card-title{font-size:13px;font-weight:700;margin-bottom:6px}
+.kanban-card-meta{font-size:11px;color:var(--text3)}
+.kanban-card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+
+/* STOCK */
+.stock-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stock-item{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px}
+.stock-name{font-size:13px;font-weight:700;margin-bottom:4px}
+.stock-sku{font-size:11px;color:var(--text3);margin-bottom:12px}
+.stock-bar-bg{background:var(--bg4);border-radius:4px;height:6px;margin-bottom:8px}
+.stock-bar{height:6px;border-radius:4px;transition:width .3s}
+.stock-nums{display:flex;justify-content:space-between;font-size:11px;color:var(--text3)}
+
+/* TASKS */
+.task-list{display:flex;flex-direction:column;gap:10px}
+.task-item{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px}
+.task-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.task-info{flex:1}
+.task-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.task-meta{font-size:11px;color:var(--text3)}
+.task-actions{display:flex;gap:6px}
+
+/* TTN */
+.ttn-preview{background:#fff;color:#000;border-radius:12px;padding:24px;font-family:'Courier New',monospace;font-size:12px;line-height:1.6;max-width:640px;margin:0 auto}
+.ttn-title{text-align:center;font-size:16px;font-weight:900;margin-bottom:4px;border-bottom:2px solid #000;padding-bottom:8px}
+.ttn-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:12px 0}
+.ttn-block{border:1px solid #000;padding:8px;font-size:11px}
+.ttn-block-title{font-weight:900;font-size:10px;text-transform:uppercase;border-bottom:1px solid #000;padding-bottom:4px;margin-bottom:6px}
+.ttn-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}
+.ttn-table th,.ttn-table td{border:1px solid #000;padding:4px 6px}
+.ttn-table th{background:#f0f0f0;font-weight:900;text-align:center}
+.ttn-footer{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:16px;font-size:11px}
+.ttn-sign{border-top:1px solid #000;margin-top:20px;padding-top:4px;font-size:10px}
+
+/* ALERT */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--accent);color:#000;padding:12px 20px;border-radius:10px;font-weight:700;font-size:13px;z-index:999;display:none;animation:slideUp .2s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.empty-state{text-align:center;padding:40px;color:var(--text3)}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--text3);margin-right:4px;margin-bottom:2px}
+.progress-bar{background:var(--bg4);border-radius:4px;height:4px;overflow:hidden}
+.progress-fill{height:4px;border-radius:4px;background:var(--accent);transition:width .3s}
+
+@media(max-width:900px){
+  .sidebar{width:60px}
+  .logo-mark{display:none}.logo-sub{display:none}
+  .nav-item span{display:none}
+  .nav-section{display:none}
+  .main{margin-left:60px}
+  .metrics{grid-template-columns:1fr 1fr}
+  .kanban{grid-template-columns:1fr 1fr}
+  .stock-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">⚡ EnergoWheel</div>
+    <div class="logo-sub">Production CRM</div>
+  </div>
+  <div class="nav">
+    <div class="nav-section">Головна</div>
+    <button class="nav-item active" onclick="showPage('dashboard')">
+      <span class="nav-icon">📊</span><span>Дашборд</span>
+    </button>
+    <div class="nav-section">Продажі</div>
+    <button class="nav-item" onclick="showPage('clients')">
+      <span class="nav-icon">👥</span><span>Клієнти</span>
+    </button>
+    <button class="nav-item" onclick="showPage('deals')">
+      <span class="nav-icon">💼</span><span>Угоди</span>
+    </button>
+    <div class="nav-section">Виробництво</div>
+    <button class="nav-item" onclick="showPage('tasks')">
+      <span class="nav-icon">🔧</span><span>Завдання</span>
+    </button>
+    <button class="nav-item" onclick="showPage('stock')">
+      <span class="nav-icon">📦</span><span>Склад</span>
+    </button>
+    <div class="nav-section">Документи</div>
+    <button class="nav-item" onclick="showPage('ttn')">
+      <span class="nav-icon">🚚</span><span>ТТН</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">v1.0 • 2025</div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Дашборд</div>
+    <div class="topbar-right">
+      <span id="todayDate" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="metrics">
+        <div class="metric-card" style="--accent-color:var(--green)">
+          <div class="metric-label">Активних клієнтів</div>
+          <div class="metric-val" id="d-clients">0</div>
+          <div class="metric-sub">за весь час</div>
+        </div>
+        <div class="metric-card" style="--accent-color:var(--accent2)">
+          <div class="metric-label">Відкритих угод</div>
+          <div class="metric-val" id="d-deals">0</div>
+          <div class="metric-sub">в роботі</div>
+        </div>
+        <div class="metric-card" style="--accent-color:var(--amber)">
+          <div class="metric-label">Завдань сьогодні</div>
+          <div class="metric-val" id="d-tasks">0</div>
+          <div class="metric-sub">виробництво</div>
+        </div>
+        <div class="metric-card" style="--accent-color:var(--red)">
+          <div class="metric-label">Компонентів мало</div>
+          <div class="metric-val" id="d-stock">0</div>
+          <div class="metric-sub">потрібне поповнення</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">Останні угоди</div>
+            <button class="btn btn-outline btn-sm" onclick="showPage('deals')">Всі →</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Клієнт</th><th>Продукт</th><th>Сума</th><th>Статус</th></tr></thead>
+            <tbody id="dash-deals"></tbody></table>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">Активні завдання</div>
+            <button class="btn btn-outline btn-sm" onclick="showPage('tasks')">Всі →</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Тип</th><th>Замовлення</th><th>Статус</th><th>Пріор.</th></tr></thead>
+            <tbody id="dash-tasks"></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENTS -->
+    <div class="page" id="page-clients">
+      <div class="toolbar">
+        <input class="search-input" type="text" placeholder="Пошук клієнта..." id="clientSearch" oninput="renderClients()">
+        <select class="filter-select" id="clientTypeFilter" onchange="renderClients()">
+          <option value="">Всі типи</option>
+          <option value="b2b">B2B</option>
+          <option value="b2c">B2C</option>
+        </select>
+        <button class="btn btn-primary" onclick="openModal('clientModal')">+ Додати клієнта</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Клієнти</div>
+          <span id="clientCount" style="font-size:12px;color:var(--text3)"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Ім'я / Компанія</th><th>Тип</th><th>Телефон</th><th>Email</th><th>Місто</th><th>Угоди</th><th>Дії</th></tr></thead>
+            <tbody id="clientsBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="clientsEmpty" style="display:none">Клієнтів не знайдено</div>
+      </div>
+    </div>
+
+    <!-- DEALS -->
+    <div class="page" id="page-deals">
+      <div class="toolbar">
+        <input class="search-input" type="text" placeholder="Пошук угоди..." id="dealSearch" oninput="renderDeals()">
+        <select class="filter-select" id="dealStatusFilter" onchange="renderDeals()">
+          <option value="">Всі статуси</option>
+          <option value="new">Нова</option>
+          <option value="nego">Переговори</option>
+          <option value="prod">Виробництво</option>
+          <option value="done">Завершена</option>
+          <option value="lost">Втрачена</option>
+        </select>
+        <button class="btn btn-primary" onclick="openDealModal()">+ Нова угода</button>
+      </div>
+      <div class="kanban" id="dealsKanban"></div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="toolbar">
+        <select class="filter-select" id="taskTypeFilter" onchange="renderTasks()">
+          <option value="">Всі типи</option>
+          <option value="akb">АКБ</option>
+          <option value="wheel">Колесо</option>
+        </select>
+        <select class="filter-select" id="taskStatusFilter" onchange="renderTasks()">
+          <option value="">Всі статуси</option>
+          <option value="queue">В черзі</option>
+          <option value="progress">В роботі</option>
+          <option value="done">Готово</option>
+        </select>
+        <button class="btn btn-primary" onclick="openTaskModal('akb')">⚡ Завдання АКБ</button>
+        <button class="btn btn-blue btn-sm" onclick="openTaskModal('wheel')">🔵 Завдання Колесо</button>
+      </div>
+      <div class="task-list" id="tasksList"></div>
+      <div class="empty-state" id="tasksEmpty" style="display:none">Немає завдань</div>
+    </div>
+
+    <!-- STOCK -->
+    <div class="page" id="page-stock">
+      <div class="toolbar">
+        <input class="search-input" type="text" placeholder="Пошук компонента..." id="stockSearch" oninput="renderStock()">
+        <button class="btn btn-primary" onclick="openStockModal()">+ Додати компонент</button>
+        <button class="btn btn-outline btn-sm" onclick="openStockOpModal()">↕ Операція</button>
+      </div>
+      <div class="stock-grid" id="stockGrid"></div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Всі компоненти</div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Артикул</th><th>Назва</th><th>Категорія</th><th>Залишок</th><th>Мін.</th><th>Од.</th><th>Ціна</th><th>Статус</th><th>Дії</th></tr></thead>
+            <tbody id="stockBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TTN -->
+    <div class="page" id="page-ttn">
+      <div style="display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start">
+        <div>
+          <div class="table-card" style="margin-bottom:16px">
+            <div class="table-header"><div class="table-title">Нова ТТН</div></div>
+            <div style="padding:16px">
+              <div class="form-group"><label>Відправник</label><input id="ttnSender" value="ТОВ EnergoWheel" placeholder="Відправник"></div>
+              <div class="form-group"><label>Адреса відправника</label><input id="ttnSenderAddr" value="м. Київ, вул. Промислова 12" placeholder="Адреса"></div>
+              <div class="form-group"><label>Одержувач</label>
+                <select id="ttnClient" onchange="fillTTNClient()">
+                  <option value="">— обрати клієнта —</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Адреса доставки</label><input id="ttnRecipAddr" placeholder="Адреса одержувача"></div>
+              <div class="form-group"><label>Телефон одержувача</label><input id="ttnRecipPhone" placeholder="+380"></div>
+              <div class="form-group"><label>Вміст вантажу</label><input id="ttnCargo" value="Акумуляторні батареї / Колеса" placeholder="Опис"></div>
+              <div class="form-row">
+                <div class="form-group"><label>Кількість місць</label><input type="number" id="ttnQty" value="1"></div>
+                <div class="form-group"><label>Вага (кг)</label><input type="number" id="ttnWeight" value="10"></div>
+              </div>
+              <div class="form-group"><label>Оголошена вартість (₴)</label><input type="number" id="ttnValue" value="0"></div>
+              <div class="form-group"><label>Перевізник</label>
+                <select id="ttnCarrier">
+                  <option>Нова Пошта</option>
+                  <option>Укрпошта</option>
+                  <option>Meest Express</option>
+                  <option>Justin</option>
+                  <option>Власний транспорт</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Дата відправки</label><input type="date" id="ttnDate"></div>
+              <div class="form-group"><label>Примітка</label><textarea id="ttnNote" rows="2" placeholder="Необов'язково"></textarea></div>
+              <button class="btn btn-primary" style="width:100%" onclick="generateTTN()">Сформувати ТТН</button>
+            </div>
+          </div>
+          <div class="table-card">
+            <div class="table-header"><div class="table-title">Журнал ТТН</div></div>
+            <div style="padding:10px" id="ttnLog"></div>
+          </div>
+        </div>
+        <div id="ttnPreviewWrap" style="display:none">
+          <div style="display:flex;gap:10px;margin-bottom:14px">
+            <button class="btn btn-primary" onclick="printTTN()">🖨 Друк</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('ttnPreviewWrap').style.display='none'">Закрити</button>
+          </div>
+          <div class="ttn-preview" id="ttnPreview"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="overlay" id="clientModal">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title" id="clientModalTitle">Додати клієнта</div><button class="close-btn" onclick="closeModal('clientModal')">×</button></div>
+  <div class="form-row">
+    <div class="form-group"><label>Ім'я / Компанія *</label><input id="cName" placeholder="Іван Петренко"></div>
+    <div class="form-group"><label>Тип</label><select id="cType"><option value="b2c">B2C (фізична особа)</option><option value="b2b">B2B (юридична особа)</option></select></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Телефон</label><input id="cPhone" placeholder="+380501234567"></div>
+    <div class="form-group"><label>Email</label><input id="cEmail" placeholder="email@example.com"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Місто</label><input id="cCity" placeholder="Київ"></div>
+    <div class="form-group"><label>ЄДРПОУ / ІПН</label><input id="cCode" placeholder="Необов'язково"></div>
+  </div>
+  <div class="form-group"><label>Адреса доставки</label><input id="cAddr" placeholder="вул. Шевченка 1, кв. 5"></div>
+  <div class="form-group"><label>Примітка</label><textarea id="cNote" placeholder="Коментар до клієнта"></textarea></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('clientModal')">Скасувати</button>
+    <button class="btn btn-primary" onclick="saveClient()">Зберегти</button>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="dealModal">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title">Нова угода</div><button class="close-btn" onclick="closeModal('dealModal')">×</button></div>
+  <div class="form-group"><label>Клієнт *</label><select id="dClient"></select></div>
+  <div class="form-row">
+    <div class="form-group"><label>Продукт *</label>
+      <select id="dProduct">
+        <option value="АКБ 12V 100Ah">АКБ 12V 100Ah</option>
+        <option value="АКБ 24V 200Ah">АКБ 24V 200Ah</option>
+        <option value="АКБ 48V 100Ah">АКБ 48V 100Ah</option>
+        <option value="Колесо 16\" стандарт">Колесо 16" стандарт</option>
+        <option value="Колесо 18\" посилене">Колесо 18" посилене</option>
+        <option value="Колесо 20\" карбон">Колесо 20" карбон</option>
+        <option value="Комплект АКБ + 2 колеса">Комплект АКБ + 2 колеса</option>
+      </select>
+    </div>
+    <div class="form-group"><label>К-сть</label><input type="number" id="dQty" value="1" min="1"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Сума (₴)</label><input type="number" id="dAmount" placeholder="0"></div>
+    <div class="form-group"><label>Статус</label>
+      <select id="dStatus">
+        <option value="new">Нова</option>
+        <option value="nego">Переговори</option>
+        <option value="prod">Виробництво</option>
+        <option value="done">Завершена</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-group"><label>Примітка</label><textarea id="dNote" placeholder="Коментар до угоди"></textarea></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('dealModal')">Скасувати</button>
+    <button class="btn btn-primary" onclick="saveDeal()">Зберегти + Створити завдання</button>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="taskModal">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title" id="taskModalTitle">Завдання на виробництво</div><button class="close-btn" onclick="closeModal('taskModal')">×</button></div>
+  <input type="hidden" id="taskType">
+  <div class="form-group"><label>Клієнт / Замовлення</label><select id="tClient"><option value="">— вільне завдання —</option></select></div>
+  <div id="akbFields">
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:700">⚡ Специфікація АКБ</div>
+      <div class="form-row">
+        <div class="form-group"><label>Напруга (V)</label><select id="akbVolt"><option>12</option><option>24</option><option>36</option><option>48</option><option>72</option></select></div>
+        <div class="form-group"><label>Ємність (Ah)</label><input type="number" id="akbAh" value="100"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Тип елементів</label><select id="akbCell"><option>Li-ion 18650</option><option>Li-ion 21700</option><option>LiFePO4</option><option>AGM</option><option>GEL</option></select></div>
+        <div class="form-group"><label>К-сть батарей</label><input type="number" id="akbCount" value="1"></div>
+      </div>
+      <div class="form-group"><label>BMS / Захист</label><select id="akbBms"><option>Стандартний BMS</option><option>BMS з балансуванням</option><option>Smart BMS (Bluetooth)</option><option>Без BMS</option></select></div>
+    </div>
+  </div>
+  <div id="wheelFields" style="display:none">
+    <div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-weight:700">🔵 Специфікація Колеса</div>
+      <div class="form-row">
+        <div class="form-group"><label>Діаметр (дюйм)</label><select id="wDiam"><option>14</option><option>16</option><option>18</option><option>20</option><option>24</option><option>26</option></select></div>
+        <div class="form-group"><label>Тип диска</label><select id="wDisk"><option>Сталевий</option><option>Литий алюмінієвий</option><option>Карбоновий</option><option>Штампований</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Тип шини</label><select id="wTire"><option>Безкамерна</option><option>Камерна</option><option>Твердий гумовий</option></select></div>
+        <div class="form-group"><label>Навантаження (кг)</label><input type="number" id="wLoad" value="150"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>К-сть коліс</label><input type="number" id="wCount" value="1"></div>
+        <div class="form-group"><label>Колір диска</label><input id="wColor" value="Чорний матовий"></div>
+      </div>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Пріоритет</label>
+      <select id="taskPrio"><option value="normal">Звичайний</option><option value="high">Високий</option><option value="urgent">Терміново</option></select>
+    </div>
+    <div class="form-group"><label>Дедлайн</label><input type="date" id="taskDeadline"></div>
+  </div>
+  <div class="form-group"><label>Примітка</label><textarea id="taskNote" placeholder="Додаткові вимоги..."></textarea></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('taskModal')">Скасувати</button>
+    <button class="btn btn-primary" onclick="saveTask()">Створити завдання</button>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="stockModal">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title">Додати компонент</div><button class="close-btn" onclick="closeModal('stockModal')">×</button></div>
+  <div class="form-row">
+    <div class="form-group"><label>Артикул *</label><input id="sSku" placeholder="AKB-001"></div>
+    <div class="form-group"><label>Назва *</label><input id="sName" placeholder="Елемент Li-ion 18650"></div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Категорія</label>
+      <select id="sCat">
+        <option>АКБ — елементи</option><option>АКБ — BMS</option><option>АКБ — корпуси</option>
+        <option>Колесо — диски</option><option>Колесо — шини</option><option>Колесо — ніпелі/спиці</option>
+        <option>Загальне</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Одиниця</label>
+      <select id="sUnit"><option>шт</option><option>кг</option><option>м</option><option>упак</option></select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group"><label>Залишок</label><input type="number" id="sQty" value="0" min="0"></div>
+    <div class="form-group"><label>Мін. залишок</label><input type="number" id="sMin" value="10" min="0"></div>
+  </div>
+  <div class="form-group"><label>Ціна (₴)</label><input type="number" id="sPrice" value="0" step="0.01"></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('stockModal')">Скасувати</button>
+    <button class="btn btn-primary" onclick="saveStock()">Зберегти</button>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="stockOpModal">
+<div class="modal">
+  <div class="modal-hdr"><div class="modal-title">Операція на складі</div><button class="close-btn" onclick="closeModal('stockOpModal')">×</button></div>
+  <div class="form-group"><label>Компонент</label><select id="opStockId"></select></div>
+  <div class="form-row">
+    <div class="form-group"><label>Тип</label>
+      <select id="opStockType"><option value="in">Прихід</option><option value="out">Витрата</option></select>
+    </div>
+    <div class="form-group"><label>Кількість</label><input type="number" id="opStockQty" value="1" min="1"></div>
+  </div>
+  <div class="form-group"><label>Коментар</label><input id="opStockNote" placeholder="Необов'язково"></div>
+  <div class="form-actions">
+    <button class="btn btn-outline" onclick="closeModal('stockOpModal')">Скасувати</button>
+    <button class="btn btn-primary" onclick="saveStockOp()">Провести</button>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'ew_crm_v1';
+let DB = loadDB();
+
+function loadDB() {
+  try { const r = localStorage.getItem(KEY); if(r) return JSON.parse(r); } catch(e){}
+  const now = new Date();
+  const d = s => { const x=new Date(); x.setDate(x.getDate()+s); return x.toISOString().split('T')[0]; };
+  return {
+    clients: [
+      {id:1,name:'Петренко Іван',type:'b2c',phone:'+380671234567',email:'ivan@gmail.com',city:'Київ',addr:'вул. Хрещатик 1',code:'',note:'Постійний клієнт'},
+      {id:2,name:'ТОВ "ЕлектроПарк"',type:'b2b',phone:'+380442345678',email:'info@electropark.ua',city:'Харків',addr:'вул. Промислова 45',code:'32145678',note:'Оптовий покупець'},
+      {id:3,name:'Сидоренко Марія',type:'b2c',phone:'+380931112233',email:'maria@ukr.net',city:'Львів',addr:'вул. Франка 10',code:'',note:''},
+    ],
+    deals: [
+      {id:1,clientId:1,product:'АКБ 48V 100Ah',qty:2,amount:28000,status:'prod',note:'Термінове замовлення',date:d(-3)},
+      {id:2,clientId:2,product:'Колесо 18" посилене',qty:10,amount:45000,status:'nego',note:'Оптова партія',date:d(-1)},
+      {id:3,clientId:3,product:'АКБ 12V 100Ah',qty:1,amount:4500,status:'new',note:'',date:d(0)},
+    ],
+    tasks: [
+      {id:1,type:'akb',clientId:1,spec:{volt:'48',ah:100,cell:'Li-ion 21700',count:2,bms:'Smart BMS (Bluetooth)'},prio:'urgent',deadline:d(2),status:'progress',note:'Термінове',created:d(-3)},
+      {id:2,type:'wheel',clientId:2,spec:{diam:'18',disk:'Литий алюмінієвий',tire:'Безкамерна',load:200,count:10,color:'Чорний матовий'},prio:'high',deadline:d(5),status:'queue',note:'Оптова партія',created:d(-1)},
+    ],
+    stock: [
+      {id:1,sku:'LI-18650',name:'Елемент Li-ion 18650 3.7V 3Ah',cat:'АКБ — елементи',unit:'шт',qty:480,min:100,price:85},
+      {id:2,sku:'LI-21700',name:'Елемент Li-ion 21700 3.7V 5Ah',cat:'АКБ — елементи',unit:'шт',qty:32,min:100,price:120},
+      {id:3,sku:'BMS-STD',name:'BMS стандартний 48V 30A',cat:'АКБ — BMS',unit:'шт',qty:15,min:10,price:450},
+      {id:4,sku:'BMS-SMART',name:'Smart BMS 48V Bluetooth',cat:'АКБ — BMS',unit:'шт',qty:4,min:10,price:890},
+      {id:5,sku:'DISK-ALU18',name:'Диск алюмінієвий 18"',cat:'Колесо — диски',unit:'шт',qty:22,min:8,price:680},
+      {id:6,sku:'TIRE-TL18',name:'Шина безкамерна 18"',cat:'Колесо — шини',unit:'шт',qty:6,min:10,price:420},
+      {id:7,sku:'CASE-48V',name:'Корпус АКБ 48V пластик',cat:'АКБ — корпуси',unit:'шт',qty:18,min:5,price:320},
+    ],
+    ttnLog: [],
+    nextClientId: 4, nextDealId: 4, nextTaskId: 3, nextStockId: 8, nextTtnId: 1
+  };
+}
+
+function saveDB() { localStorage.setItem(KEY, JSON.stringify(DB)); }
+function toast(msg, col='var(--accent)') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.background=col; t.style.display='block';
+  setTimeout(()=>t.style.display='none', 2800);
+}
+
+// NAV
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>{
+    if(b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+name+"'")) b.classList.add('active');
+  });
+  const titles={dashboard:'Дашборд',clients:'Клієнти',deals:'Угоди',tasks:'Завдання виробництва',stock:'Склад компонентів',ttn:'Формування ТТН'};
+  document.getElementById('pageTitle').textContent = titles[name]||name;
+  if(name==='dashboard') renderDashboard();
+  if(name==='clients') renderClients();
+  if(name==='deals') renderDeals();
+  if(name==='tasks') renderTasks();
+  if(name==='stock') renderStock();
+  if(name==='ttn') renderTTNPage();
+}
+
+// DASHBOARD
+function renderDashboard() {
+  document.getElementById('d-clients').textContent = DB.clients.length;
+  document.getElementById('d-deals').textContent = DB.deals.filter(d=>d.status!='done'&&d.status!='lost').length;
+  document.getElementById('d-tasks').textContent = DB.tasks.filter(t=>t.status!='done').length;
+  document.getElementById('d-stock').textContent = DB.stock.filter(s=>s.qty<=s.min).length;
+
+  const statusLabel={new:'Нова',nego:'Переговори',prod:'Виробництво',done:'Завершена',lost:'Втрачена'};
+  const statusBadge={new:'badge-blue',nego:'badge-amber',prod:'badge-green',done:'badge-gray',lost:'badge-red'};
+  document.getElementById('dash-deals').innerHTML = DB.deals.slice(-5).reverse().map(d=>{
+    const c=DB.clients.find(x=>x.id===d.clientId);
+    return `<tr><td>${c?c.name:'—'}</td><td>${d.product}</td><td>₴${d.amount.toLocaleString('uk')}</td><td><span class="badge ${statusBadge[d.status]}">${statusLabel[d.status]}</span></td></tr>`;
+  }).join('');
+
+  const prioLabel={normal:'🟢',high:'🟡',urgent:'🔴'};
+  const taskTypeLabel={akb:'АКБ',wheel:'Колесо'};
+  const taskStatusBadge={queue:'badge-gray',progress:'badge-amber',done:'badge-green'};
+  const taskStatusLabel={queue:'В черзі',progress:'В роботі',done:'Готово'};
+  document.getElementById('dash-tasks').innerHTML = DB.tasks.filter(t=>t.status!='done').slice(0,5).map(t=>{
+    const c=DB.clients.find(x=>x.id===t.clientId);
+    return `<tr><td><span class="badge ${t.type==='akb'?'badge-green':'badge-blue'}">${taskTypeLabel[t.type]}</span></td><td>${c?c.name:'Вільне'}</td><td><span class="badge ${taskStatusBadge[t.status]}">${taskStatusLabel[t.status]}</span></td><td>${prioLabel[t.prio]}</td></tr>`;
+  }).join('');
+}
+
+// CLIENTS
+function renderClients() {
+  const q=(document.getElementById('clientSearch').value||'').toLowerCase();
+  const tf=document.getElementById('clientTypeFilter').value;
+  let list=DB.clients.filter(c=>{
+    if(q&&!c.name.toLowerCase().includes(q)&&!c.phone.includes(q)&&!c.city.toLowerCase().includes(q))return false;
+    if(tf&&c.type!==tf)return false;
+    return true;
+  });
+  document.getElementById('clientCount').textContent=`${list.length} клієнтів`;
+  document.getElementById('clientsEmpty').style.display=list.length?'none':'block';
+  document.getElementById('clientsBody').innerHTML=list.map((c,i)=>{
+    const dealCount=DB.deals.filter(d=>d.clientId===c.id).length;
+    return `<tr>
+      <td style="color:var(--text3)">${i+1}</td>
+      <td><strong>${c.name}</strong>${c.code?`<br><span style="font-size:10px;color:var(--text3)">${c.code}</span>`:''}</td>
+      <td><span class="badge ${c.type==='b2b'?'badge-blue':'badge-green'}">${c.type.toUpperCase()}</span></td>
+      <td>${c.phone||'—'}</td>
+      <td style="color:var(--text3)">${c.email||'—'}</td>
+      <td>${c.city||'—'}</td>
+      <td><span class="badge badge-gray">${dealCount}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-blue" onclick="openDealModalForClient(${c.id})">+ Угода</button>
+        <button class="btn btn-sm btn-outline" onclick="editClient(${c.id})" style="margin-left:4px">✏️</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteClient(${c.id})" style="margin-left:4px">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+let editClientId=null;
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+function editClient(id) {
+  const c=DB.clients.find(x=>x.id===id); if(!c)return;
+  editClientId=id;
+  document.getElementById('clientModalTitle').textContent='Редагувати клієнта';
+  document.getElementById('cName').value=c.name;
+  document.getElementById('cType').value=c.type;
+  document.getElementById('cPhone').value=c.phone;
+  document.getElementById('cEmail').value=c.email;
+  document.getElementById('cCity').value=c.city;
+  document.getElementById('cCode').value=c.code||'';
+  document.getElementById('cAddr').value=c.addr||'';
+  document.getElementById('cNote').value=c.note||'';
+  openModal('clientModal');
+}
+
+function saveClient() {
+  const name=document.getElementById('cName').value.trim();
+  if(!name){toast('Вкажіть ім\'я клієнта','var(--red)');return;}
+  const data={name,type:document.getElementById('cType').value,phone:document.getElementById('cPhone').value.trim(),email:document.getElementById('cEmail').value.trim(),city:document.getElementById('cCity').value.trim(),code:document.getElementById('cCode').value.trim(),addr:document.getElementById('cAddr').value.trim(),note:document.getElementById('cNote').value.trim()};
+  if(editClientId){Object.assign(DB.clients.find(x=>x.id===editClientId),data);}
+  else{DB.clients.push({id:DB.nextClientId++,...data});}
+  editClientId=null;
+  document.getElementById('clientModalTitle').textContent='Додати клієнта';
+  ['cName','cPhone','cEmail','cCity','cCode','cAddr','cNote'].forEach(id=>document.getElementById(id).value='');
+  closeModal('clientModal'); saveDB(); renderClients();
+  toast(editClientId?'Клієнта оновлено':'Клієнта додано ✓');
+}
+
+function deleteClient(id) {
+  if(!confirm('Видалити клієнта?'))return;
+  DB.clients=DB.clients.filter(c=>c.id!==id); saveDB(); renderClients(); toast('Видалено');
+}
+
+// DEALS
+const DEAL_COLS=[{key:'new',label:'Нові',color:'var(--accent2)'},{key:'nego',label:'Переговори',color:'var(--amber)'},{key:'prod',label:'Виробництво',color:'var(--accent)'},{key:'done',label:'Завершені',color:'var(--text3)'}];
+
+function renderDeals() {
+  const q=(document.getElementById('dealSearch').value||'').toLowerCase();
+  const sf=document.getElementById('dealStatusFilter').value;
+  const kanban=document.getElementById('dealsKanban');
+  kanban.innerHTML=DEAL_COLS.map(col=>{
+    let list=DB.deals.filter(d=>{
+      if(d.status!==col.key)return false;
+      if(sf&&d.status!==sf)return false;
+      if(q){const c=DB.clients.find(x=>x.id===d.clientId);if(!((c&&c.name.toLowerCase().includes(q))||d.product.toLowerCase().includes(q)))return false;}
+      return true;
+    });
+    return `<div class="kanban-col">
+      <div class="kanban-hdr" style="border-left:3px solid ${col.color}">
+        <div class="kanban-hdr-title" style="color:${col.color}">${col.label}</div>
+        <div class="kanban-count">${list.length}</div>
+      </div>
+      <div class="kanban-body">
+        ${list.map(d=>{
+          const c=DB.clients.find(x=>x.id===d.clientId);
+          return `<div class="kanban-card">
+            <div class="kanban-card-title">${d.product}</div>
+            <div class="kanban-card-meta">👤 ${c?c.name:'—'}</div>
+            <div class="kanban-card-meta">📅 ${d.date} &nbsp;•&nbsp; к-сть: ${d.qty}</div>
+            ${d.note?`<div class="kanban-card-meta" style="margin-top:4px;font-style:italic">${d.note}</div>`:''}
+            <div class="kanban-card-footer">
+              <strong style="color:var(--accent)">₴${d.amount.toLocaleString('uk')}</strong>
+              <div style="display:flex;gap:4px">
+                <button class="btn btn-sm btn-amber" onclick="moveDeal(${d.id})">→</button>
+                <button class="btn btn-sm btn-blue" onclick="createTaskFromDeal(${d.id})">🔧</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteDeal(${d.id})">🗑</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+        ${list.length===0?`<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Порожньо</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openDealModal() {
+  const sel=document.getElementById('dClient');
+  sel.innerHTML=DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  openModal('dealModal');
+}
+function openDealModalForClient(clientId) {
+  openDealModal();
+  document.getElementById('dClient').value=clientId;
+}
+
+function saveDeal() {
+  const clientId=parseInt(document.getElementById('dClient').value);
+  const product=document.getElementById('dProduct').value;
+  const qty=parseInt(document.getElementById('dQty').value)||1;
+  const amount=parseFloat(document.getElementById('dAmount').value)||0;
+  const status=document.getElementById('dStatus').value;
+  const note=document.getElementById('dNote').value.trim();
+  const deal={id:DB.nextDealId++,clientId,product,qty,amount,status,note,date:new Date().toISOString().split('T')[0]};
+  DB.deals.push(deal);
+  if(status==='prod'){
+    const type=product.toLowerCase().includes('колес')||product.toLowerCase().includes('wheel')?'wheel':'akb';
+    DB.tasks.push({id:DB.nextTaskId++,type,clientId,spec:{},prio:'normal',deadline:'',status:'queue',note:`Авто з угоди: ${product}`,created:new Date().toISOString().split('T')[0]});
+  }
+  ['dAmount','dNote'].forEach(id=>document.getElementById(id).value='');
+  closeModal('dealModal'); saveDB(); renderDeals();
+  toast('Угоду збережено ✓');
+}
+
+function moveDeal(id) {
+  const d=DB.deals.find(x=>x.id===id); if(!d)return;
+  const order=['new','nego','prod','done'];
+  const idx=order.indexOf(d.status);
+  if(idx<order.length-1)d.status=order[idx+1];
+  saveDB(); renderDeals(); toast('Статус угоди оновлено');
+}
+function deleteDeal(id){if(!confirm('Видалити угоду?'))return;DB.deals=DB.deals.filter(d=>d.id!==id);saveDB();renderDeals();toast('Видалено');}
+function createTaskFromDeal(dealId){const d=DB.deals.find(x=>x.id===dealId);if(!d)return;openTaskModal(d.product.toLowerCase().includes('колес')?'wheel':'akb',d.clientId);}
+
+// TASKS
+function openTaskModal(type, clientId=null) {
+  document.getElementById('taskType').value=type;
+  document.getElementById('taskModalTitle').textContent=type==='akb'?'⚡ Завдання на виробництво АКБ':'🔵 Завдання на збірку Колеса';
+  document.getElementById('akbFields').style.display=type==='akb'?'block':'none';
+  document.getElementById('wheelFields').style.display=type==='wheel'?'block':'none';
+  const sel=document.getElementById('tClient');
+  sel.innerHTML='<option value="">— вільне завдання —</option>'+DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  if(clientId) sel.value=clientId;
+  const dl=new Date(); dl.setDate(dl.getDate()+7);
+  document.getElementById('taskDeadline').value=dl.toISOString().split('T')[0];
+  openModal('taskModal');
+}
+
+function saveTask() {
+  const type=document.getElementById('taskType').value;
+  const clientId=parseInt(document.getElementById('tClient').value)||null;
+  const prio=document.getElementById('taskPrio').value;
+  const deadline=document.getElementById('taskDeadline').value;
+  const note=document.getElementById('taskNote').value.trim();
+  let spec={};
+  if(type==='akb'){spec={volt:document.getElementById('akbVolt').value,ah:parseInt(document.getElementById('akbAh').value),cell:document.getElementById('akbCell').value,count:parseInt(document.getElementById('akbCount').value)||1,bms:document.getElementById('akbBms').value};}
+  else{spec={diam:document.getElementById('wDiam').value,disk:document.getElementById('wDisk').value,tire:document.getElementById('wTire').value,load:parseInt(document.getElementById('wLoad').value)||0,count:parseInt(document.getElementById('wCount').value)||1,color:document.getElementById('wColor').value};}
+  DB.tasks.push({id:DB.nextTaskId++,type,clientId,spec,prio,deadline,status:'queue',note,created:new Date().toISOString().split('T')[0]});
+  document.getElementById('taskNote').value='';
+  closeModal('taskModal'); saveDB(); renderTasks();
+  toast('Завдання створено ✓');
+}
+
+function renderTasks() {
+  const tf=document.getElementById('taskTypeFilter').value;
+  const sf=document.getElementById('taskStatusFilter').value;
+  let list=DB.tasks.filter(t=>{
+    if(tf&&t.type!==tf)return false;
+    if(sf&&t.status!==sf)return false;
+    return true;
+  });
+  document.getElementById('tasksEmpty').style.display=list.length?'none':'block';
+  const prioColor={normal:'var(--text3)',high:'var(--amber)',urgent:'var(--red)'};
+  const prioLabel={normal:'Звичайний',high:'Високий',urgent:'ТЕРМІНОВО'};
+  const statusColor={queue:'var(--text3)',progress:'var(--amber)',done:'var(--green)'};
+  const statusLabel={queue:'В черзі',progress:'В роботі',done:'✅ Готово'};
+  document.getElementById('tasksList').innerHTML=list.map(t=>{
+    const c=DB.clients.find(x=>x.id===t.clientId);
+    let specHtml='';
+    if(t.type==='akb'&&t.spec.volt){specHtml=`<span class="tag">${t.spec.volt}V / ${t.spec.ah}Ah</span><span class="tag">${t.spec.cell}</span><span class="tag">${t.spec.bms}</span><span class="tag">×${t.spec.count}</span>`;}
+    if(t.type==='wheel'&&t.spec.diam){specHtml=`<span class="tag">${t.spec.diam}"</span><span class="tag">${t.spec.disk}</span><span class="tag">${t.spec.tire}</span><span class="tag">${t.spec.color}</span><span class="tag">×${t.spec.count}</span>`;}
+    return `<div class="task-item">
+      <div class="task-status-dot" style="background:${statusColor[t.status]}"></div>
+      <div style="width:70px;text-align:center">
+        <span class="badge ${t.type==='akb'?'badge-green':'badge-blue'}" style="font-size:10px">${t.type==='akb'?'⚡ АКБ':'🔵 Колесо'}</span>
+      </div>
+      <div class="task-info">
+        <div class="task-title">${c?c.name:'Вільне завдання'} ${t.note?`<span style="font-weight:400;color:var(--text3)">— ${t.note}</span>`:''}</div>
+        <div class="task-meta">${specHtml}</div>
+        <div class="task-meta" style="margin-top:4px">📅 Дедлайн: ${t.deadline||'—'} &nbsp;•&nbsp; Створено: ${t.created}</div>
+      </div>
+      <div>
+        <span style="color:${prioColor[t.prio]};font-size:11px;font-weight:700">${prioLabel[t.prio]}</span>
+        <br><span class="badge ${t.status==='done'?'badge-green':t.status==='progress'?'badge-amber':'badge-gray'}" style="margin-top:4px">${statusLabel[t.status]}</span>
+      </div>
+      <div class="task-actions">
+        ${t.status==='queue'?`<button class="btn btn-sm btn-amber" onclick="advanceTask(${t.id})">▶ Старт</button>`:''}
+        ${t.status==='progress'?`<button class="btn btn-sm btn-primary" onclick="advanceTask(${t.id})">✓ Готово</button>`:''}
+        <button class="btn btn-sm btn-danger" onclick="deleteTask(${t.id})" style="margin-left:4px">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function advanceTask(id){const t=DB.tasks.find(x=>x.id===id);if(!t)return;if(t.status==='queue')t.status='progress';else if(t.status==='progress')t.status='done';saveDB();renderTasks();toast('Статус оновлено');}
+function deleteTask(id){if(!confirm('Видалити завдання?'))return;DB.tasks=DB.tasks.filter(t=>t.id!==id);saveDB();renderTasks();}
+
+// STOCK
+function renderStock() {
+  const q=(document.getElementById('stockSearch').value||'').toLowerCase();
+  let list=DB.stock.filter(s=>!q||s.name.toLowerCase().includes(q)||s.sku.toLowerCase().includes(q)||s.cat.toLowerCase().includes(q));
+
+  // cards for low stock
+  const lowItems=DB.stock.filter(s=>s.qty<=s.min).slice(0,6);
+  document.getElementById('stockGrid').innerHTML=lowItems.map(s=>{
+    const pct=Math.min(100,Math.round(s.qty/Math.max(s.min*2,1)*100));
+    const col=s.qty===0?'var(--red)':s.qty<=s.min?'var(--amber)':'var(--green)';
+    return `<div class="stock-item" style="border-color:${col}40">
+      <div class="stock-name">${s.name}</div>
+      <div class="stock-sku">${s.sku} • ${s.cat}</div>
+      <div class="stock-bar-bg"><div class="stock-bar" style="width:${pct}%;background:${col}"></div></div>
+      <div class="stock-nums"><span style="color:${col};font-weight:700">${s.qty} ${s.unit}</span><span>мін: ${s.min}</span></div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('stockBody').innerHTML=list.map(s=>{
+    const col=s.qty===0?'badge-red':s.qty<=s.min?'badge-amber':'badge-green';
+    const label=s.qty===0?'❌ Немає':s.qty<=s.min?'⚠️ Мало':'✅ OK';
+    return `<tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--text3)">${s.sku}</td>
+      <td><strong>${s.name}</strong></td>
+      <td><span class="tag">${s.cat}</span></td>
+      <td><strong>${s.qty}</strong></td>
+      <td style="color:var(--text3)">${s.min}</td>
+      <td style="color:var(--text3)">${s.unit}</td>
+      <td>₴${s.price.toLocaleString('uk')}</td>
+      <td><span class="badge ${col}">${label}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-sm btn-outline" onclick="quickStockOp(${s.id},'in')">↓</button>
+        <button class="btn btn-sm btn-outline" onclick="quickStockOp(${s.id},'out')" style="margin:0 4px">↑</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteStock(${s.id})">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const opSel=document.getElementById('opStockId');
+  opSel.innerHTML=DB.stock.map(s=>`<option value="${s.id}">${s.name} (${s.qty} ${s.unit})</option>`).join('');
+}
+
+function openStockModal(){openModal('stockModal');}
+function openStockOpModal(){openModal('stockOpModal');}
+function quickStockOp(id,type){document.getElementById('opStockId').value=id;document.getElementById('opStockType').value=type;openModal('stockOpModal');}
+
+function saveStock() {
+  const sku=document.getElementById('sSku').value.trim();
+  const name=document.getElementById('sName').value.trim();
+  if(!sku||!name){toast('Вкажіть артикул та назву','var(--red)');return;}
+  DB.stock.push({id:DB.nextStockId++,sku,name,cat:document.getElementById('sCat').value,unit:document.getElementById('sUnit').value,qty:parseFloat(document.getElementById('sQty').value)||0,min:parseFloat(document.getElementById('sMin').value)||0,price:parseFloat(document.getElementById('sPrice').value)||0});
+  ['sSku','sName','sQty','sPrice'].forEach(id=>document.getElementById(id).value='');
+  closeModal('stockModal'); saveDB(); renderStock(); toast('Компонент додано ✓');
+}
+
+function saveStockOp() {
+  const id=parseInt(document.getElementById('opStockId').value);
+  const type=document.getElementById('opStockType').value;
+  const qty=parseFloat(document.getElementById('opStockQty').value)||0;
+  const s=DB.stock.find(x=>x.id===id);
+  if(!s||qty<=0){toast('Перевірте дані','var(--red)');return;}
+  if(type==='out'&&qty>s.qty){toast(`На складі лише ${s.qty} ${s.unit}`,'var(--red)');return;}
+  s.qty=type==='in'?s.qty+qty:s.qty-qty;
+  document.getElementById('opStockQty').value='1';
+  closeModal('stockOpModal'); saveDB(); renderStock(); toast(`Операцію проведено. Залишок: ${s.qty} ${s.unit}`);
+}
+
+function deleteStock(id){if(!confirm('Видалити компонент?'))return;DB.stock=DB.stock.filter(s=>s.id!==id);saveDB();renderStock();}
+
+// TTN
+function renderTTNPage() {
+  const sel=document.getElementById('ttnClient');
+  sel.innerHTML='<option value="">— обрати клієнта —</option>'+DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const d=new Date().toISOString().split('T')[0];
+  document.getElementById('ttnDate').value=d;
+  renderTTNLog();
+}
+
+function fillTTNClient() {
+  const id=parseInt(document.getElementById('ttnClient').value);
+  const c=DB.clients.find(x=>x.id===id);
+  if(c){document.getElementById('ttnRecipAddr').value=c.addr||'';document.getElementById('ttnRecipPhone').value=c.phone||'';}
+}
+
+function generateTTN() {
+  const clientId=parseInt(document.getElementById('ttnClient').value)||null;
+  const client=DB.clients.find(x=>x.id===clientId);
+  const sender=document.getElementById('ttnSender').value;
+  const senderAddr=document.getElementById('ttnSenderAddr').value;
+  const recipAddr=document.getElementById('ttnRecipAddr').value;
+  const recipPhone=document.getElementById('ttnRecipPhone').value;
+  const cargo=document.getElementById('ttnCargo').value;
+  const qty=document.getElementById('ttnQty').value;
+  const weight=document.getElementById('ttnWeight').value;
+  const value=document.getElementById('ttnValue').value;
+  const carrier=document.getElementById('ttnCarrier').value;
+  const date=document.getElementById('ttnDate').value;
+  const note=document.getElementById('ttnNote').value;
+  const num='ТТН-'+String(DB.nextTtnId).padStart(5,'0');
+
+  const fmtDate = ds => { const d=new Date(ds); return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`; };
+
+  const ttn={id:DB.nextTtnId++,num,sender,senderAddr,recipient:client?client.name:recipAddr,recipAddr,recipPhone,cargo,qty,weight,value,carrier,date,note,created:new Date().toISOString()};
+  DB.ttnLog.push(ttn); saveDB();
+
+  document.getElementById('ttnPreview').innerHTML=`
+    <div class="ttn-title">ТОВАРНО-ТРАНСПОРТНА НАКЛАДНА №${num}</div>
+    <div style="text-align:center;font-size:10px;margin-bottom:12px">Перевізник: <strong>${carrier}</strong> &nbsp;|&nbsp; Дата відправки: <strong>${fmtDate(date)}</strong></div>
+    <div class="ttn-grid">
+      <div class="ttn-block">
+        <div class="ttn-block-title">Відправник</div>
+        <div>${sender}</div>
+        <div>${senderAddr}</div>
+      </div>
+      <div class="ttn-block">
+        <div class="ttn-block-title">Одержувач</div>
+        <div>${client?client.name:recipAddr}</div>
+        <div>${recipAddr}</div>
+        <div>${recipPhone}</div>
+      </div>
+    </div>
+    <table class="ttn-table">
+      <thead><tr><th>№</th><th>Найменування вантажу</th><th>К-сть місць</th><th>Вага (кг)</th><th>Оголошена вартість (₴)</th></tr></thead>
+      <tbody>
+        <tr><td style="text-align:center">1</td><td>${cargo}</td><td style="text-align:center">${qty}</td><td style="text-align:center">${weight}</td><td style="text-align:center">${parseFloat(value).toLocaleString('uk')}</td></tr>
+        <tr style="background:#f9f9f9"><td colspan="2"><strong>Разом:</strong></td><td style="text-align:center"><strong>${qty}</strong></td><td style="text-align:center"><strong>${weight}</strong></td><td style="text-align:center"><strong>${parseFloat(value).toLocaleString('uk')}</strong></td></tr>
+      </tbody>
+    </table>
+    ${note?`<div style="margin-top:10px;font-size:11px;border:1px solid #ccc;padding:6px"><strong>Примітка:</strong> ${note}</div>`:''}
+    <div class="ttn-footer">
+      <div>
+        <div><strong>Здав відправник:</strong></div>
+        <div class="ttn-sign">П.І.Б. ________________________</div>
+        <div class="ttn-sign">Підпис _______ Дата __________</div>
+      </div>
+      <div>
+        <div><strong>Прийняв одержувач:</strong></div>
+        <div class="ttn-sign">П.І.Б. ________________________</div>
+        <div class="ttn-sign">Підпис _______ Дата __________</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;text-align:center;font-size:9px;color:#999">Сформовано: ${new Date().toLocaleString('uk-UA')} | EnergoWheel CRM</div>
+  `;
+  document.getElementById('ttnPreviewWrap').style.display='block';
+  renderTTNLog();
+  toast(`ТТН ${num} сформовано ✓`);
+}
+
+function renderTTNLog() {
+  const log=document.getElementById('ttnLog');
+  if(!DB.ttnLog.length){log.innerHTML='<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Ще немає ТТН</div>';return;}
+  log.innerHTML=[...DB.ttnLog].reverse().slice(0,10).map(t=>`
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;font-weight:700">${t.num}</div>
+        <div style="font-size:11px;color:var(--text3)">${t.recipient} • ${t.carrier}</div>
+      </div>
+      <span class="badge badge-green" style="font-size:10px">${t.date}</span>
+    </div>
+  `).join('');
+}
+
+function printTTN() {
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ТТН</title><style>body{font-family:'Courier New',monospace;font-size:12px;padding:20px}${document.querySelector('style').textContent}</style></head><body>${document.getElementById('ttnPreview').outerHTML}<script>window.onload=function(){window.print();}<\/script></body></html>`);
+  w.document.close();
+}
+
+// INIT
+document.getElementById('todayDate').textContent=new Date().toLocaleDateString('uk-UA',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});
+renderDashboard();
+</script>
+</body>
+</html>
