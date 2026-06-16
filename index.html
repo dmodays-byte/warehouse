@@ -676,54 +676,142 @@ function renderInvoiceHTML(inv,client,company){
   const f=company||DB.companies.find(x=>x.id===inv.companyId)||DB.companies[0];
   const total=inv.price;
   const hasPdv=f.type==='tov'||f.type==='fop3pdv';
+  // ПДВ = 1/6 від суми з ПДВ (ставка 20%)
   const pdvSum=hasPdv?Math.round(total/6*100)/100:0;
-  const priceStr=total.toLocaleString('uk',{minimumFractionDigits:2});
-  const pdvStr=pdvSum.toLocaleString('uk',{minimumFractionDigits:2});
+  const fmt=n=>n.toLocaleString('uk',{minimumFractionDigits:2,maximumFractionDigits:2});
   const supLabel=f.type==='tov'?f.name:(f.name.startsWith('ФОП')?f.name:'ФОП '+f.name);
-  const clientName=client?client.name+(client.code?' код '+client.code:'')+(client.addr?', '+client.addr:''):'КІНЦЕВИЙ СПОЖИВАЧ';
-  let html='<div style="font-family:Arial,sans-serif;font-size:11px;color:#000;line-height:1.5">';
-  html+='<div style="border:1px solid #aaa;padding:8px 10px;margin-bottom:14px;background:#fafafa">';
-  html+='<b style="font-size:11px">Зразок заповнення платіжного доручення</b>';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:10px;margin-top:6px">';
-  html+='<tr><td style="padding:3px 6px;border:1px solid #ccc;background:#f0f0f0;font-weight:700;width:140px">Отримувач</td><td style="padding:3px 6px;border:1px solid #ccc;font-weight:700">'+supLabel+'</td></tr>';
-  html+='<tr><td style="padding:3px 6px;border:1px solid #ccc;background:#f0f0f0;font-weight:700">Код</td><td style="padding:3px 6px;border:1px solid #ccc">'+f.inn+'</td></tr>';
-  html+='<tr><td style="padding:3px 6px;border:1px solid #ccc;background:#f0f0f0;font-weight:700">Банк отримувача</td><td style="padding:3px 6px;border:1px solid #ccc">'+f.bank+'</td></tr>';
-  html+='<tr><td style="padding:3px 6px;border:1px solid #ccc;background:#f0f0f0;font-weight:700">рах. №</td><td style="padding:3px 6px;border:1px solid #ccc;font-weight:700">'+f.iban+'</td></tr>';
-  html+='</table></div>';
-  html+='<div style="text-align:center;font-size:14px;font-weight:700;margin-bottom:12px">Рахунок на оплату № '+inv.num+' від '+fmtDate(inv.date)+' р.</div>';
-  html+='<table style="width:100%;border-collapse:collapse;margin-bottom:10px;font-size:11px">';
-  html+='<tr><td style="width:120px;font-weight:700;padding:2px 0;vertical-align:top">Постачальник:</td><td style="padding:2px 0">'+supLabel+(f.iban?', п/р '+f.iban:'')+' у банку '+f.bank+(f.address?', '+f.address:'')+(f.inn?', код за ЄДРПОУ/ІПН '+f.inn:'')+'</td></tr>';
-  html+='<tr><td style="font-weight:700;padding:2px 0;vertical-align:top">Покупець:</td><td style="padding:2px 0">'+clientName+'</td></tr>';
-  html+='<tr><td style="font-weight:700;padding:2px 0">Договір:</td><td>ОСНОВНИЙ</td></tr>';
-  html+='</table>';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:11px">';
-  html+='<thead><tr style="background:#f0f0f0">';
-  html+='<th style="border:1px solid #999;padding:5px 6px;text-align:center;width:28px">№</th>';
-  html+='<th style="border:1px solid #999;padding:5px 6px;width:80px">Артикул</th>';
-  html+='<th style="border:1px solid #999;padding:5px 6px;text-align:left">Товари (роботи, послуги)</th>';
-  html+='<th style="border:1px solid #999;padding:5px 6px;text-align:center;width:70px">Кількість</th>';
-  html+='<th style="border:1px solid #999;padding:5px 6px;text-align:right;width:100px">Ціна'+(hasPdv?' з ПДВ':'')+'</th>';
-  html+='<th style="border:1px solid #999;padding:5px 6px;text-align:right;width:100px">Сума'+(hasPdv?' з ПДВ':'')+'</th>';
-  html+='</tr></thead><tbody><tr>';
-  html+='<td style="border:1px solid #999;padding:5px 6px;text-align:center">1</td>';
-  html+='<td style="border:1px solid #999;padding:5px 6px;text-align:center;font-size:10px">'+(inv.artKul||'')+'</td>';
-  html+='<td style="border:1px solid #999;padding:5px 6px">'+inv.spec+'</td>';
-  html+='<td style="border:1px solid #999;padding:5px 6px;text-align:center">'+(inv.qty||1)+' шт</td>';
-  html+='<td style="border:1px solid #999;padding:5px 6px;text-align:right">'+priceStr+'</td>';
-  html+='<td style="border:1px solid #999;padding:5px 6px;text-align:right;font-weight:700">'+priceStr+'</td>';
-  html+='</tr></tbody><tfoot>';
-  html+='<tr><td colspan="5" style="border:1px solid #999;padding:5px 6px;text-align:right;font-weight:700">Разом:</td><td style="border:1px solid #999;padding:5px 6px;text-align:right;font-weight:700">'+priceStr+'</td></tr>';
-  html+=hasPdv?'<tr><td colspan="5" style="border:1px solid #999;padding:5px 6px;text-align:right">У тому числі ПДВ (20%):</td><td style="border:1px solid #999;padding:5px 6px;text-align:right">'+pdvStr+'</td></tr>':'<tr><td colspan="6" style="border:1px solid #999;padding:5px 6px;text-align:right;color:#666">Без ПДВ</td></tr>';
-  html+='</tfoot></table>';
-  html+='<div style="margin-top:10px;font-size:11px">Всього найменувань 1, на суму <b>'+priceStr+' грн.</b></div>';
-  if(hasPdv)html+='<div style="font-size:11px">У т.ч. ПДВ: <b>'+pdvStr+' грн.</b></div>';
-  html+='<div style="margin-top:8px;font-size:10px;color:#555;border-top:1px solid #ddd;padding-top:8px">Увага! Оплата цього рахунку означає погодження з умовами поставки товарів. Повідомлення про оплату є обов\'язковим. Товар відпускається за фактом надходження коштів на п/р Постачальника. '+f.tax+'</div>';
-  html+='<div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:11px">';
-  html+='<div><b>Виписав(ла):</b><div style="border-top:1px solid #999;margin-top:22px;padding-top:4px;color:#888">'+(f.signature||supLabel)+' / підпис</div></div>';
-  html+='<div><b>Отримав(ла):</b><div style="border-top:1px solid #999;margin-top:22px;padding-top:4px;color:#888">_____________________ / підпис</div></div>';
-  html+='</div>';
-  html+='<div style="margin-top:12px;text-align:center;font-size:9px;color:#bbb">'+new Date().toLocaleString('uk-UA')+' | EnergoWheel CRM</div></div>';
-  document.getElementById('invoicePreview').innerHTML=html;
+  const clientName=client?client.name+(client.code?', код '+client.code:'')+(client.addr?', '+client.addr:''):'КІНЦЕВИЙ СПОЖИВАЧ';
+  const qty=inv.qty||1;
+  const artKul=inv.artKul||'';
+
+  // Сума прописом (спрощено)
+  const numToWords=n=>{
+    const ones=['','один','два','три','чотири','п\'ять','шість','сім','вісім','дев\'ять','десять','одинадцять','дванадцять','тринадцять','чотирнадцять','п\'ятнадцять','шістнадцять','сімнадцять','вісімнадцять','дев\'ятнадцять'];
+    const tens=['','','двадцять','тридцять','сорок','п\'ятдесят','шістдесят','сімдесят','вісімдесят','дев\'яносто'];
+    const hunds=['','сто','двісті','триста','чотириста','п\'ятсот','шістсот','сімсот','вісімсот','дев\'ятсот'];
+    if(n===0)return'нуль';
+    let r='';
+    const th=Math.floor(n/1000),u=n%1000;
+    if(th>0){
+      const th_h=Math.floor(th/100),th_r=th%100,th_o=th_r%10,th_t=Math.floor(th_r/10);
+      r+=hunds[th_h]?(hunds[th_h]+' '):'';
+      if(th_r>=11&&th_r<=19)r+=ones[th_r]+' тисяч ';
+      else{r+=(th_t?tens[th_t]+' ':'');r+=(th_o===1?'одна':th_o===2?'дві':ones[th_o]?(ones[th_o]+' '):'');r+=(th_o===1?'тисяча':th_o>=2&&th_o<=4?'тисячі':'тисяч')+' ';}
+    }
+    if(u>0){
+      const u_h=Math.floor(u/100),u_r=u%100,u_o=u_r%10,u_t=Math.floor(u_r/10);
+      r+=hunds[u_h]?(hunds[u_h]+' '):'';
+      if(u_r>=11&&u_r<=19)r+=ones[u_r]+' ';
+      else{r+=(u_t?tens[u_t]+' ':'');r+=(ones[u_o]?(ones[u_o]+' '):'');}
+    }
+    return r.trim();
+  };
+  const pdvWords=n=>{
+    const ones=['','одна','дві','три','чотири','п\'ять','шість','сім','вісім','дев\'ять','десять','одинадцять','дванадцять','тринадцять','чотирнадцять','п\'ятнадцять','шістнадцять','сімнадцять','вісімнадцять','дев\'ятнадцять'];
+    const tens=['','','двадцять','тридцять','сорок','п\'ятдесят','шістдесят','сімдесят','вісімдесят','дев\'яносто'];
+    const hunds=['','сто','двісті','триста','чотириста','п\'ятсот','шістсот','сімсот','вісімсот','дев\'ятсот'];
+    if(n===0)return'нуль';
+    let r='';
+    const th=Math.floor(n/1000),u=n%1000;
+    if(th>0){
+      const th_h=Math.floor(th/100),th_r=th%100,th_o=th_r%10,th_t=Math.floor(th_r/10);
+      r+=hunds[th_h]?(hunds[th_h]+' '):'';
+      if(th_r>=11&&th_r<=19)r+=ones[th_r]+' тисяч ';
+      else{r+=(th_t?tens[th_t]+' ':'');r+=(th_o===1?'одна':th_o===2?'дві':th_o>2&&th_o<5?ones[th_o]:(ones[th_o]||''));if(r.trim())r+=(th_o===1?' тисяча ':th_o>=2&&th_o<=4?' тисячі ':' тисяч ');}
+    }
+    if(u>0){
+      const u_h=Math.floor(u/100),u_r=u%100,u_o=u_r%10,u_t=Math.floor(u_r/10);
+      r+=hunds[u_h]?(hunds[u_h]+' '):'';
+      if(u_r>=11&&u_r<=19)r+=ones[u_r]+' ';
+      else{r+=(u_t?tens[u_t]+' ':'');r+=(ones[u_o]?(ones[u_o]+' '):'');}
+    }
+    return r.trim();
+  };
+
+  const grn=Math.floor(total);
+  const kop=Math.round((total-grn)*100);
+  const kopStr=String(kop).padStart(2,'0');
+  const totalWords=numToWords(grn);
+  const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+  const pdvGrn=Math.floor(pdvSum);
+  const pdvKop=Math.round((pdvSum-pdvGrn)*100);
+  const pdvKopStr=String(pdvKop).padStart(2,'0');
+  const pdvWordsStr=pdvWords(pdvGrn);
+
+  // Рядок "КРЕДИТ рах. №" як у зразку для ТОВ
+  const bankLine=f.type==='tov'?'КРЕДИТ рах. №':' рах. №';
+
+  let h='';
+  h+='<div style="font-family:Arial,sans-serif;font-size:11px;color:#000;line-height:1.6;max-width:680px">';
+
+  // Блок "Увага!" вгорі — як у зразку
+  h+='<div style="font-size:10px;margin-bottom:12px;line-height:1.5">';
+  h+='Увага! Оплата цього рахунку означає погодження з умовами поставки товарів. Повідомлення про оплату є обов\'язковим, в іншому випадку не гарантується наявність товарів на складі. Товар відпускається за фактом надходження коштів на п/р Постачальника, самовивозом, за наявності довіреності та паспорта.';
+  h+='</div>';
+
+  // Зразок платіжного доручення
+  h+='<div style="border:1px solid #aaa;margin-bottom:14px">';
+  h+='<div style="background:#eee;padding:4px 8px;font-weight:700;font-size:10px;border-bottom:1px solid #aaa">Зразок заповнення платіжного доручення</div>';
+  h+='<table style="width:100%;border-collapse:collapse;font-size:11px">';
+  h+='<tr><td style="padding:4px 8px;border-bottom:1px solid #ddd;border-right:1px solid #ddd;width:140px;color:#555">Отримувач</td><td style="padding:4px 8px;border-bottom:1px solid #ddd;font-weight:700">'+supLabel+'</td></tr>';
+  h+='<tr><td style="padding:4px 8px;border-bottom:1px solid #ddd;border-right:1px solid #ddd;color:#555">Код</td><td style="padding:4px 8px;border-bottom:1px solid #ddd">'+f.inn+'</td></tr>';
+  h+='<tr><td style="padding:4px 8px;border-right:1px solid #ddd;color:#555">Банк отримувача '+bankLine+'</td><td style="padding:4px 8px"><span style="font-weight:700">'+f.bank+'</span><br><span style="font-weight:700">'+f.iban+'</span></td></tr>';
+  h+='</table></div>';
+
+  // Заголовок рахунку
+  h+='<div style="font-size:14px;font-weight:700;margin-bottom:10px">Рахунок на оплату № '+inv.num+' від '+fmtDate(inv.date)+' р.</div>';
+
+  // Постачальник / Покупець / Договір
+  h+='<table style="width:100%;border-collapse:collapse;margin-bottom:2px;font-size:11px">';
+  h+='<tr><td style="font-weight:700;padding:2px 0;width:110px;vertical-align:top">Постачальник:</td>';
+  h+='<td style="padding:2px 0">'+supLabel+', п/р '+f.iban+' у банку '+f.bank+', МФО,<br>'+f.address+(f.inn?',<br>код за ЄДРПОУ '+f.inn+', ІПН '+f.inn:'')+'</td></tr>';
+  h+='<tr><td style="font-weight:700;padding:2px 0;vertical-align:top">Покупець:</td><td style="padding:2px 0">'+clientName+'</td></tr>';
+  h+='<tr><td style="font-weight:700;padding:2px 0">Договір:</td><td style="padding:2px 0">ОСНОВНИЙ</td></tr>';
+  h+='</table>';
+
+  // Таблиця товарів
+  h+='<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:11px">';
+  h+='<thead><tr style="background:#f5f5f5">';
+  h+='<th style="border:1px solid #999;padding:5px 6px;text-align:center;width:30px">№</th>';
+  h+='<th style="border:1px solid #999;padding:5px 6px;text-align:center;width:90px">Артикул</th>';
+  h+='<th style="border:1px solid #999;padding:5px 6px;text-align:left">Товари (роботи, послуги)</th>';
+  h+='<th style="border:1px solid #999;padding:5px 6px;text-align:center;width:70px">Кількість</th>';
+  h+='<th style="border:1px solid #999;padding:5px 6px;text-align:right;width:100px">Ціна'+(hasPdv?' з ПДВ':'')+'</th>';
+  h+='<th style="border:1px solid #999;padding:5px 6px;text-align:right;width:100px">Сума'+(hasPdv?' з ПДВ':'')+'</th>';
+  h+='</tr></thead><tbody>';
+  h+='<tr>';
+  h+='<td style="border:1px solid #999;padding:5px 6px;text-align:center">1</td>';
+  h+='<td style="border:1px solid #999;padding:5px 6px;text-align:center;font-size:10px">'+artKul+'</td>';
+  h+='<td style="border:1px solid #999;padding:5px 6px">'+inv.spec+'</td>';
+  h+='<td style="border:1px solid #999;padding:5px 6px;text-align:center">'+qty+' шт</td>';
+  h+='<td style="border:1px solid #999;padding:5px 6px;text-align:right">'+fmt(total)+'</td>';
+  h+='<td style="border:1px solid #999;padding:5px 6px;text-align:right">'+fmt(total)+'</td>';
+  h+='</tr></tbody>';
+  h+='<tfoot>';
+  h+='<tr><td colspan="5" style="border:1px solid #999;padding:5px 8px;text-align:right;font-weight:700">Разом:</td><td style="border:1px solid #999;padding:5px 8px;text-align:right;font-weight:700">'+fmt(total)+'</td></tr>';
+  if(hasPdv)h+='<tr><td colspan="5" style="border:1px solid #999;padding:5px 8px;text-align:right">У тому числі ПДВ:</td><td style="border:1px solid #999;padding:5px 8px;text-align:right">'+fmt(pdvSum)+'</td></tr>';
+  h+='</tfoot></table>';
+
+  // Підсумок
+  h+='<div style="margin-top:10px;font-size:11px">';
+  h+='Всього найменувань 1, на суму '+fmt(total)+' грн.<br>';
+  h+='<b>'+cap(totalWords)+' гривень '+kopStr+' копійок</b><br>';
+  if(hasPdv)h+='У т.ч. ПДВ: <b>'+cap(pdvWordsStr)+' гривень '+pdvKopStr+' копійок</b>';
+  if(!hasPdv)h+='<span style="color:#555">Без ПДВ. '+f.tax+'</span>';
+  h+='</div>';
+
+  // Підпис
+  h+='<div style="margin-top:20px;font-size:11px">';
+  h+='<span style="font-weight:700">Виписав(ла):</span>';
+  h+='<span style="display:inline-block;width:200px;border-bottom:1px solid #000;margin-left:10px">&nbsp;</span>';
+  h+='<span style="font-size:10px;color:#555"> ('+( f.signature||supLabel)+')</span>';
+  h+='</div>';
+
+  h+='<div style="margin-top:14px;text-align:center;font-size:9px;color:#bbb">Сформовано: '+new Date().toLocaleString('uk-UA')+' | EnergoWheel CRM</div>';
+  h+='</div>';
+
+  document.getElementById('invoicePreview').innerHTML=h;
   document.getElementById('invoicePreviewWrap').style.display='block';
 }
 function openInvoiceFromOrder(){
