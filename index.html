@@ -356,23 +356,61 @@ tbody tr:hover td{background:var(--bg3)}
 
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
-    <div style="max-width:560px">
-      <div class="table-card">
-        <div class="table-header"><div class="table-title">⚙️ Реквізити ФОП / Компанії</div></div>
-        <div style="padding:18px">
-          <div class="form-row"><div class="form-group"><label>ПІБ або назва компанії *</label><input id="setName" placeholder="Петренко Іван Іванович"></div><div class="form-group"><label>ІПН / ЄДРПОУ *</label><input id="setInn" placeholder="1234567890"></div></div>
-          <div class="form-group"><label>Адреса</label><input id="setAddress" placeholder="м. Київ, вул. Промислова 12"></div>
-          <div class="form-row"><div class="form-group"><label>Телефон</label><input id="setPhone" placeholder="+380671234567"></div><div class="form-group"><label>Email</label><input id="setEmail" placeholder="info@company.ua"></div></div>
-          <div class="form-group"><label>Назва банку</label><input id="setBank" placeholder="АТ КБ ПРИВАТБАНК"></div>
-          <div class="form-group"><label>IBAN</label><input id="setIban" placeholder="UA123456789012345678901234567"></div>
-          <div class="form-group"><label>Система оподаткування</label><select id="setTaxType" onchange="updateTaxText()"><option value="fop3">ФОП 3 група ЄП, без ПДВ (5%)</option><option value="fop2">ФОП 2 група ЄП, без ПДВ</option><option value="fop3pdv">ФОП 3 група ЄП, платник ПДВ (3%)</option><option value="tov">ТОВ / загальна система</option><option value="custom">Інше (вручну)</option></select></div>
-          <div class="form-group"><label>Текст про оподаткування у рахунку</label><input id="setTax"></div>
-          <div class="form-group"><label>Підпис у рахунку</label><input id="setSignature" placeholder="ФОП Петренко І.І."></div>
-          <div style="display:flex;gap:10px;margin-top:6px"><button class="btn btn-primary" onclick="saveSettings()">💾 Зберегти</button><button class="btn btn-outline btn-sm" onclick="loadSettingsForm()">↺ Скинути</button></div>
-          <div id="settingsSaved" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);border-radius:8px;font-size:13px;color:var(--green)">✅ Збережено! Нові реквізити будуть у всіх наступних рахунках.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+      <div>
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title">🏢 Мої компанії / ФОП</div>
+            <button class="btn btn-primary btn-sm" onclick="openCompanyModal(null)">+ Додати</button>
+          </div>
+          <div id="companiesList" style="padding:8px"></div>
+        </div>
+        <div class="table-card" style="margin-top:14px">
+          <div class="table-header"><div class="table-title">💰 Прайс-лист</div><button class="btn btn-primary btn-sm" onclick="openPriceModal()">+ Додати</button></div>
+          <table><thead><tr><th>Назва</th><th>Тип</th><th>Ціна (₴)</th><th></th></tr></thead><tbody id="priceBody"></tbody></table>
         </div>
       </div>
-      <div class="table-card" style="margin-top:14px"><div class="table-header"><div class="table-title">💰 Прайс-лист</div><button class="btn btn-primary btn-sm" onclick="openPriceModal()">+ Додати</button></div><table><thead><tr><th>Назва</th><th>Тип</th><th>Ціна (₴)</th><th></th></tr></thead><tbody id="priceBody"></tbody></table></div>
+      <div class="table-card" id="companyFormCard" style="display:none">
+        <div class="table-header"><div class="table-title" id="companyFormTitle">Додати компанію</div></div>
+        <div style="padding:16px">
+          <input type="hidden" id="setCompanyId">
+          <div class="form-row">
+            <div class="form-group"><label>ПІБ або назва *</label><input id="setName" placeholder="Петренко Іван Іванович"></div>
+            <div class="form-group"><label>Тип</label>
+              <select id="setCompanyType">
+                <option value="fop3">ФОП 3 група ЄП</option>
+                <option value="fop2">ФОП 2 група ЄП</option>
+                <option value="fop3pdv">ФОП 3 група + ПДВ</option>
+                <option value="tov">ТОВ / ПП</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>ІПН / ЄДРПОУ *</label><input id="setInn" placeholder="1234567890"></div>
+            <div class="form-group"><label>Телефон</label><input id="setPhone" placeholder="+380671234567"></div>
+          </div>
+          <div class="form-group"><label>Адреса</label><input id="setAddress" placeholder="м. Київ, вул. Промислова 12"></div>
+          <div class="form-group"><label>Email</label><input id="setEmail" placeholder="info@company.ua"></div>
+          <div class="form-group"><label>Назва банку</label><input id="setBank" placeholder='АТ КБ "ПРИВАТБАНК"'></div>
+          <div class="form-group"><label>IBAN</label><input id="setIban" placeholder="UA123456789012345678901234567"></div>
+          <div class="form-group"><label>Система оподаткування (текст у рахунку)</label>
+            <select id="setTaxType" onchange="updateTaxText()">
+              <option value="fop3">ФОП 3 група ЄП, без ПДВ (5%)</option>
+              <option value="fop2">ФОП 2 група ЄП, без ПДВ</option>
+              <option value="fop3pdv">ФОП 3 група ЄП, платник ПДВ (3%)</option>
+              <option value="tov">ТОВ / загальна система</option>
+              <option value="custom">Інше (вручну)</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Текст про оподаткування</label><input id="setTax"></div>
+          <div class="form-group"><label>Підпис у рахунку</label><input id="setSignature" placeholder="ФОП Петренко І.І."></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary" onclick="saveCompany()">💾 Зберегти</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('companyFormCard').style.display='none'">Скасувати</button>
+          </div>
+          <div id="settingsSaved" style="display:none;margin-top:10px;padding:9px 12px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);border-radius:8px;font-size:13px;color:var(--green)">✅ Збережено!</div>
+        </div>
+      </div>
     </div>
   </div>
   </div><!-- /content -->
@@ -485,7 +523,8 @@ tbody tr:hover td{background:var(--bg3)}
 
   <div class="form-actions">
     <button class="btn btn-outline" onclick="closeModal('orderModal')">Скасувати</button>
-    <button class="btn btn-green btn-sm" onclick="saveOrderAndInvoice()">Зберегти + Рахунок</button>
+    <div class="form-group" style="margin-bottom:0"><label>Рахунок від</label><select id="oInvoiceFrom" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:var(--font)" id="oInvoiceFrom"></select></div>
+        <button class="btn btn-green btn-sm" onclick="saveOrderAndInvoice()">Зберегти + Рахунок</button>
     <button class="btn btn-primary" onclick="saveOrder()">Зберегти замовлення</button>
   </div>
 </div>
@@ -569,6 +608,7 @@ tbody tr:hover td{background:var(--bg3)}
 <div class="modal" style="width:400px">
   <div class="modal-hdr"><div class="modal-title">Рахунок із замовлення</div><button class="close-btn" onclick="closeModal('invOrderModal')">×</button></div>
   <div class="form-group"><label>Оберіть замовлення</label><select id="invOrderSel"></select></div>
+  <div class="form-group"><label>Рахунок від</label><select id="invCompanySel"></select></div>
   <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('invOrderModal')">Скасувати</button><button class="btn btn-primary" onclick="generateInvoiceFromOrder()">Сформувати рахунок</button></div>
 </div>
 </div>
@@ -595,7 +635,12 @@ function loadDB(){
   const td=()=>new Date().toISOString().split('T')[0];
   const fd=(n)=>{const d=new Date();d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];};
   return{
-    fop:{name:'Петренко Іван Іванович',inn:'1234567890',address:'м. Київ, вул. Промислова 12',phone:'+380671234567',bank:'АТ КБ "ПРИВАТБАНК"',iban:'UA123456789012345678901234567',tax:'Платник єдиного податку 3 група, без ПДВ'},
+    companies:[
+      {id:1,name:'Петренко Іван Іванович',inn:'1234567890',address:'м. Київ, вул. Промислова 12',phone:'+380671234567',email:'',bank:'АТ КБ "ПРИВАТБАНК"',iban:'UA123456789012345678901234567',tax:'Платник єдиного податку 3 група, ставка 5%, без ПДВ',signature:'ФОП Петренко І.І.',type:'fop3'},
+      {id:2,name:'Сидоренко Марія Василівна',inn:'9876543210',address:'м. Харків, вул. Сумська 45',phone:'+380661234567',email:'',bank:'АТ "MONOBANK"',iban:'UA987654321098765432109876543',tax:'Платник єдиного податку 2 група, без ПДВ',signature:'ФОП Сидоренко М.В.',type:'fop2'},
+      {id:3,name:'ТОВ "ЕнергоВіл"',inn:'12345678',address:'м. Київ, вул. Велика Васильківська 100',phone:'+380442345678',email:'info@energovil.ua',bank:'АТ КБ "ПРИВАТБАНК"',iban:'UA111222333444555666777888999',tax:'Платник податку на прибуток, платник ПДВ',signature:'Директор Коваленко О.В.',type:'tov'},
+    ],
+    fop:{name:'Петренко Іван Іванович',inn:'1234567890',address:'м. Київ, вул. Промислова 12',phone:'+380671234567',email:'',bank:'АТ КБ "ПРИВАТБАНК"',iban:'UA123456789012345678901234567',tax:'Платник єдиного податку 3 група, ставка 5%, без ПДВ',signature:'ФОП Петренко І.І.',type:'fop3'},
     pricelist:[
       {id:1,name:'АКБ 12V 100Ah Li-ion',price:4500,type:'akb'},
       {id:2,name:'АКБ 24V 100Ah Li-ion',price:7800,type:'akb'},
@@ -626,7 +671,7 @@ function loadDB(){
       {id:5,sku:'LI-18650',name:'Елемент Li-ion 18650',cat:'АКБ — елементи',unit:'шт',qty:480,min:100,price:85},
     ],
     invoices:[],ttnLog:[],
-    nextClientId:3,nextOrderId:3,nextTaskId:3,nextStockId:6,nextInvId:1,nextTtnId:1
+    nextCompanyId:4,nextClientId:3,nextOrderId:3,nextTaskId:3,nextStockId:6,nextInvId:1,nextTtnId:1
   };
 }
 function saveDB(){localStorage.setItem(KEY,JSON.stringify(DB));}
@@ -693,6 +738,8 @@ function renderDashboard(){
 function openOrderModal(){
   const sel=document.getElementById('oClient');
   sel.innerHTML=DB.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  const cs=document.getElementById('oInvoiceFrom');
+  if(cs)cs.innerHTML=DB.companies.map(c=>`<option value="${c.id}">${c.type==='tov'?'🏢':'👤'} ${c.name}</option>`).join('');
   updatePriceList();
   const dl=new Date();dl.setDate(dl.getDate()+7);
   document.getElementById('oDelivDate').value=dl.toISOString().split('T')[0];
@@ -765,7 +812,8 @@ function saveOrderAndInvoice(){
   DB.orders.push(data);
   DB.tasks.push({id:DB.nextTaskId++,type:data.type,clientId:data.clientId,spec:data.spec,prio:'normal',deadline:data.delivDate||data.selfDate||'',status:'queue',note:`Замовлення #${data.id}`,created:td()});
   saveDB();closeModal('orderModal');
-  generateInvoice(data.id);
+  const selCo=document.getElementById('oInvoiceFrom');const coId=selCo?parseInt(selCo.value):DB.companies[0].id;
+  generateInvoice(data.id,coId);
   renderOrders();renderDashboard();
   toast('Замовлення + рахунок сформовано ✓');
 }
@@ -843,19 +891,20 @@ function editClient(id){const c=DB.clients.find(x=>x.id===id);if(!c)return;editC
 function deleteClient(id){if(!confirm('Видалити?'))return;DB.clients=DB.clients.filter(c=>c.id!==id);saveDB();renderClients();}
 
 // INVOICES
-function generateInvoice(orderId){
+function generateInvoice(orderId,companyId){
   const o=DB.orders.find(x=>x.id===orderId);if(!o){toast('Замовлення не знайдено','var(--red)');return;}
-  const c=DB.clients.find(x=>x.id===o.clientId);
-  const num='РХ-'+String(DB.nextInvId).padStart(4,'0');
+  const client=DB.clients.find(x=>x.id===o.clientId);
+  const company=DB.companies.find(x=>x.id===companyId)||DB.companies[0];
+  const num=(company.type==='tov'?'РХ-ТОВ-':'РХ-ФОП-')+String(DB.nextInvId).padStart(4,'0');
   const spec=o.type==='akb'?`АКБ ${o.spec.volt}V / ${o.spec.ah}Ah, ${o.spec.cell}, ${o.spec.bms}, ${o.spec.count} шт`:`Колесо ${o.spec.diam}", ${o.spec.disk}, ${o.spec.tire}, ${o.spec.count} шт`;
-  const inv={id:DB.nextInvId++,num,orderId,clientId:o.clientId,spec,price:o.price,count:1,date:td(),created:new Date().toISOString()};
+  const inv={id:DB.nextInvId++,num,orderId,clientId:o.clientId,companyId:company.id,spec,price:o.price,count:1,date:td(),created:new Date().toISOString()};
   DB.invoices.push(inv);saveDB();
-  renderInvoiceHTML(inv,c,o);
+  renderInvoiceHTML(inv,client,o,company);
   showPage('invoices');
-  toast(`Рахунок ${num} сформовано ✓`);
+  toast(`Рахунок ${num} від ${company.name} сформовано ✓`);
 }
-function renderInvoiceHTML(inv,c,o){
-  const f=DB.fop;
+function renderInvoiceHTML(inv,c,o,company){
+  const f=company||DB.companies.find(x=>x.id===inv.companyId)||DB.companies[0];
   const total=inv.price;
   document.getElementById('invoicePreview').innerHTML=`
   <div class="inv-header">
@@ -892,9 +941,11 @@ function renderInvoiceHTML(inv,c,o){
 function openInvoiceFromOrder(){
   const sel=document.getElementById('invOrderSel');
   sel.innerHTML=DB.orders.map(o=>{const c=DB.clients.find(x=>x.id===o.clientId);const spec=o.type==='akb'?`${o.spec.volt}V/${o.spec.ah}Ah`:`${o.spec.diam}"`;return`<option value="${o.id}">#${o.id} — ${c?c.name:'?'} — ${spec} — ₴${o.price.toLocaleString('uk')}</option>`;}).join('');
+  const cs=document.getElementById('invCompanySel');
+  if(cs)cs.innerHTML=DB.companies.map(c=>`<option value="${c.id}">${c.type==='tov'?'🏢':'👤'} ${c.name}</option>`).join('');
   openModal('invOrderModal');
 }
-function generateInvoiceFromOrder(){const id=parseInt(document.getElementById('invOrderSel').value);closeModal('invOrderModal');generateInvoice(id);}
+function generateInvoiceFromOrder(){const id=parseInt(document.getElementById('invOrderSel').value);const cid=parseInt(document.getElementById('invCompanySel').value)||DB.companies[0].id;closeModal('invOrderModal');generateInvoice(id,cid);}
 function renderInvoices(){
   const q=(document.getElementById('invSearch').value||'').toLowerCase();
   const list=DB.invoices.filter(i=>!q||i.num.toLowerCase().includes(q)||String(i.clientId).includes(q));
@@ -907,11 +958,11 @@ function renderInvoices(){
         <span style="font-size:12px;font-weight:700">${inv.num}</span>
         <span class="badge bgreen" style="font-size:10px">₴${inv.price.toLocaleString('uk')}</span>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px">${c?c.name:'—'} • ${fmtDate(inv.date)}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px">${c?c.name:'—'} • ${fmtDate(inv.date)}</div><div style="font-size:10px;color:var(--text3)">${(DB.companies.find(x=>x.id===inv.companyId)||DB.companies[0]).name}</div>
     </div>`;
   }).join('');
 }
-function showInvoice(id){const inv=DB.invoices.find(x=>x.id===id);if(!inv)return;const c=DB.clients.find(x=>x.id===inv.clientId);const o=DB.orders.find(x=>x.id===inv.orderId);renderInvoiceHTML(inv,c,o);}
+function showInvoice(id){const inv=DB.invoices.find(x=>x.id===id);if(!inv)return;const c=DB.clients.find(x=>x.id===inv.clientId);const o=DB.orders.find(x=>x.id===inv.orderId);const co=DB.companies.find(x=>x.id===inv.companyId)||DB.companies[0];renderInvoiceHTML(inv,c,o,co);}
 function printInvoice(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Рахунок</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:20px}${document.querySelectorAll('style')[0].textContent}</style></head><body>${document.getElementById('invoicePreview').outerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
 
 // TASKS
@@ -1053,38 +1104,77 @@ function renderTTNLog(){
 function printTTN(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ТТН</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:20px}</style></head><body>${document.getElementById('ttnPreview').outerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
 
 // SETTINGS
-const TAX_TEXTS={
-  fop3:'Платник єдиного податку 3 група, ставка 5%, без ПДВ',
-  fop2:'Платник єдиного податку 2 група, без ПДВ',
-  fop3pdv:'Платник єдиного податку 3 група, платник ПДВ, ставка 3%',
-  tov:'Платник податку на прибуток на загальній системі оподаткування',
-  custom:''
-};
-function updateTaxText(){
-  const v=document.getElementById('setTaxType').value;
-  if(v!=='custom')document.getElementById('setTax').value=TAX_TEXTS[v];
+const TAX_TEXTS={fop3:'Платник єдиного податку 3 група, ставка 5%, без ПДВ',fop2:'Платник єдиного податку 2 група, без ПДВ',fop3pdv:'Платник єдиного податку 3 група, платник ПДВ, ставка 3%',tov:'Платник податку на прибуток на загальній системі оподаткування',custom:''};
+const CO_TYPE_LABEL={fop3:'ФОП 3гр ЄП',fop2:'ФОП 2гр ЄП',fop3pdv:'ФОП 3гр+ПДВ',tov:'ТОВ/ПП'};
+
+function updateTaxText(){const v=document.getElementById('setTaxType').value;if(v!=='custom')document.getElementById('setTax').value=TAX_TEXTS[v];}
+
+function loadSettingsForm(){renderCompaniesList();}
+
+function renderCompaniesList(){
+  const el=document.getElementById('companiesList');
+  el.innerHTML=DB.companies.map(c=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 8px;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:700;font-size:13px">${c.type==='tov'?'🏢':'👤'} ${c.name}</div>
+        <div style="font-size:11px;color:var(--text3)">ІПН: ${c.inn} | ${CO_TYPE_LABEL[c.type]||c.type}</div>
+        <div style="font-size:11px;color:var(--text3)">${c.bank||''} ${c.iban?'| IBAN: '+c.iban.slice(0,12)+'...':''}</div>
+      </div>
+      <div style="display:flex;gap:5px;flex-shrink:0">
+        <button class="btn btn-sm btn-blue" onclick="openCompanyModal(${c.id})">✏️</button>
+        ${DB.companies.length>1?`<button class="btn btn-sm btn-danger" onclick="deleteCompany(${c.id})">🗑</button>`:''}
+      </div>
+    </div>`).join('');
 }
-function loadSettingsForm(){
-  const f=DB.fop;
-  document.getElementById('setName').value=f.name||'';
-  document.getElementById('setInn').value=f.inn||'';
-  document.getElementById('setAddress').value=f.address||'';
-  document.getElementById('setPhone').value=f.phone||'';
-  document.getElementById('setEmail').value=f.email||'';
-  document.getElementById('setBank').value=f.bank||'';
-  document.getElementById('setIban').value=f.iban||'';
-  document.getElementById('setTax').value=f.tax||'';
-  document.getElementById('setSignature').value=f.signature||('ФОП '+f.name);
-  const found=Object.entries(TAX_TEXTS).find(([k,v])=>v&&f.tax&&f.tax.includes(v.slice(0,20)));
-  document.getElementById('setTaxType').value=found?found[0]:'custom';
+
+function openCompanyModal(id){
+  const card=document.getElementById('companyFormCard');
+  card.style.display='block';
+  if(id){
+    const c=DB.companies.find(x=>x.id===id);if(!c)return;
+    document.getElementById('companyFormTitle').textContent='Редагувати';
+    document.getElementById('setCompanyId').value=c.id;
+    document.getElementById('setName').value=c.name;
+    document.getElementById('setCompanyType').value=c.type||'fop3';
+    document.getElementById('setInn').value=c.inn||'';
+    document.getElementById('setPhone').value=c.phone||'';
+    document.getElementById('setAddress').value=c.address||'';
+    document.getElementById('setEmail').value=c.email||'';
+    document.getElementById('setBank').value=c.bank||'';
+    document.getElementById('setIban').value=c.iban||'';
+    document.getElementById('setTax').value=c.tax||'';
+    document.getElementById('setSignature').value=c.signature||c.name;
+    const found=Object.entries(TAX_TEXTS).find(([k,v])=>v&&c.tax&&c.tax.includes(v.slice(0,20)));
+    document.getElementById('setTaxType').value=found?found[0]:'custom';
+  } else {
+    document.getElementById('companyFormTitle').textContent='Додати компанію';
+    document.getElementById('setCompanyId').value='';
+    ['setName','setInn','setPhone','setAddress','setEmail','setBank','setIban','setTax','setSignature'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('setTaxType').value='fop3';updateTaxText();
+  }
 }
-function saveSettings(){
+
+function saveCompany(){
   const name=document.getElementById('setName').value.trim();
   if(!name){toast('Вкажіть ПІБ або назву','var(--red)');return;}
-  DB.fop={name,inn:document.getElementById('setInn').value.trim(),address:document.getElementById('setAddress').value.trim(),phone:document.getElementById('setPhone').value.trim(),email:document.getElementById('setEmail').value.trim(),bank:document.getElementById('setBank').value.trim(),iban:document.getElementById('setIban').value.trim(),tax:document.getElementById('setTax').value.trim(),signature:document.getElementById('setSignature').value.trim()||('ФОП '+name)};
-  saveDB();
-  const el=document.getElementById('settingsSaved');el.style.display='block';setTimeout(()=>el.style.display='none',3000);
+  const data={name,type:document.getElementById('setCompanyType').value,inn:document.getElementById('setInn').value.trim(),phone:document.getElementById('setPhone').value.trim(),address:document.getElementById('setAddress').value.trim(),email:document.getElementById('setEmail').value.trim(),bank:document.getElementById('setBank').value.trim(),iban:document.getElementById('setIban').value.trim(),tax:document.getElementById('setTax').value.trim(),signature:document.getElementById('setSignature').value.trim()||name};
+  const existId=parseInt(document.getElementById('setCompanyId').value);
+  if(existId){Object.assign(DB.companies.find(x=>x.id===existId),data);}
+  else{DB.companies.push({id:DB.nextCompanyId++,...data});}
+  DB.fop=DB.companies[0];
+  saveDB();renderCompaniesList();
+  const el=document.getElementById('settingsSaved');el.style.display='block';setTimeout(()=>{el.style.display='none';},2500);
 }
+
+function deleteCompany(id){
+  if(DB.companies.length<=1){toast('Має бути хоча б одна компанія','var(--red)');return;}
+  if(!confirm('Видалити компанію?'))return;
+  DB.companies=DB.companies.filter(c=>c.id!==id);
+  DB.fop=DB.companies[0];
+  saveDB();renderCompaniesList();toast('Видалено');
+}
+
+function saveSettings(){saveCompany();}
 function openPriceModal(){document.getElementById('priceName').value='';document.getElementById('priceVal').value='';openModal('priceModal');}
 function savePriceItem(){
   const name=document.getElementById('priceName').value.trim(),price=parseFloat(document.getElementById('priceVal').value)||0;
