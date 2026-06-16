@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Склад — Облік товарів</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f0f4f2;color:#2C2C2A;font-size:14px}
+header{background:#1D6A4A;color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+header h1{font-size:18px;font-weight:700}
+header span{font-size:12px;opacity:.7}
+.container{max-width:1100px;margin:0 auto;padding:20px 16px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.metric{background:#fff;border-radius:10px;padding:14px 16px;border:1px solid #dce8e3}
+.metric-label{font-size:11px;color:#888;margin-bottom:4px}
+.metric-value{font-size:26px;font-weight:700}
+.metric-value.green{color:#1D9E75}.metric-value.amber{color:#BA7517}.metric-value.red{color:#A32D2D}
+.tabs{display:flex;gap:4px;background:#e4ede9;padding:4px;border-radius:8px;margin-bottom:20px;width:fit-content}
+.tab{padding:8px 20px;font-size:13px;font-weight:600;border:none;background:transparent;cursor:pointer;border-radius:6px;color:#555;transition:all .15s}
+.tab.active{background:#fff;color:#1D6A4A;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.section{display:none}.section.active{display:block}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.toolbar input,.toolbar select{padding:7px 10px;border:1px solid #c8ddd3;border-radius:7px;font-size:13px;background:#fff}
+.toolbar input{flex:1;min-width:180px}
+.btn{padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid #c8ddd3;background:#fff;color:#2C2C2A;transition:all .15s}
+.btn:hover{background:#e4ede9}
+.btn.primary{background:#1D6A4A;border-color:#1D6A4A;color:#fff}
+.btn.primary:hover{background:#155238}
+.btn.danger{color:#A32D2D;border-color:#f0c0c0}
+.btn.danger:hover{background:#FCEBEB}
+.btn.sm{font-size:12px;padding:4px 10px}
+.card{background:#fff;border-radius:10px;border:1px solid #dce8e3;overflow:hidden;margin-bottom:20px}
+table{width:100%;border-collapse:collapse}
+th{background:#f5faf7;font-size:11px;font-weight:700;color:#555;padding:10px 12px;text-align:left;border-bottom:1px solid #dce8e3;text-transform:uppercase;letter-spacing:.04em}
+td{padding:10px 12px;border-bottom:1px solid #f0f4f2;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f5faf7}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:5px}
+.badge.ok{background:#EAF3DE;color:#3B6D11}
+.badge.low{background:#FAEEDA;color:#854F0B}
+.badge.zero{background:#FCEBEB;color:#A32D2D}
+.badge.in{background:#EAF3DE;color:#3B6D11}
+.badge.out{background:#FCEBEB;color:#A32D2D}
+.badge.adj{background:#E6F1FB;color:#185FA5}
+.cat{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;background:#f0f4f2;color:#555;border:1px solid #dce8e3}
+.empty{text-align:center;padding:32px;color:#aaa;font-size:14px}
+.alert{padding:10px 16px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none}
+.alert.success{background:#EAF3DE;color:#3B6D11;border:1px solid #9FE1CB}
+.alert.error{background:#FCEBEB;color:#A32D2D;border:1px solid #F7C1C1}
+.op-card{background:#fff;border-radius:10px;border:1px solid #dce8e3;padding:18px;margin-bottom:16px}
+.op-card h3{font-size:14px;font-weight:700;margin-bottom:14px;color:#1D6A4A}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group label{font-size:12px;color:#666;font-weight:600}
+.form-group input,.form-group select{padding:8px 10px;border:1px solid #c8ddd3;border-radius:7px;font-size:13px}
+.form-row-end{display:flex;justify-content:flex-end;margin-top:6px}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:12px;padding:22px;width:420px;max-width:95vw;border:1px solid #c8ddd3}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-hdr h2{font-size:16px;font-weight:700}
+.close-btn{background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1}
+.sku{font-family:monospace;font-size:12px;color:#888}
+@media(max-width:600px){.metrics{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📦 Облік товарів на складі</h1>
+  <span id="hdrDate"></span>
+</header>
+<div class="container">
+  <div class="metrics">
+    <div class="metric"><div class="metric-label">Найменувань</div><div class="metric-value" id="mTotal">0</div></div>
+    <div class="metric"><div class="metric-label">На складі (од.)</div><div class="metric-value green" id="mStock">0</div></div>
+    <div class="metric"><div class="metric-label">Закінчується</div><div class="metric-value amber" id="mLow">0</div></div>
+    <div class="metric"><div class="metric-label">Немає на складі</div><div class="metric-value red" id="mZero">0</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('products')">Товари</button>
+    <button class="tab" onclick="switchTab('operations')">Операції</button>
+  </div>
+
+  <div id="alertBox" class="alert"></div>
+
+  <!-- ТОВАРИ -->
+  <div class="section active" id="sec-products">
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Пошук за назвою або артикулом..." oninput="renderProducts()">
+      <select onchange="renderProducts()" id="catFilter"><option value="">Усі категорії</option></select>
+      <select onchange="renderProducts()" id="stockFilter">
+        <option value="">Усі залишки</option>
+        <option value="ok">В наявності</option>
+        <option value="low">Закінчується</option>
+        <option value="zero">Немає</option>
+      </select>
+      <button class="btn primary" onclick="openAddModal()">+ Додати товар</button>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr>
+          <th>Артикул</th><th>Найменування</th><th>Категорія</th>
+          <th>Залишок</th><th>Од.</th><th>Мін.</th><th>Ціна</th><th>Статус</th><th>Дії</th>
+        </tr></thead>
+        <tbody id="productsBody"></tbody>
+      </table>
+      <div class="empty" id="emptyProd" style="display:none">Товарів не знайдено</div>
+    </div>
+  </div>
+
+  <!-- ОПЕРАЦІЇ -->
+  <div class="section" id="sec-operations">
+    <div class="op-card">
+      <h3>Нова операція</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Тип операції</label>
+          <select id="opType"><option value="in">Прихід</option><option value="out">Витрата</option><option value="adj">Коригування</option></select>
+        </div>
+        <div class="form-group"><label>Товар</label><select id="opProduct"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label id="opQtyLbl">Кількість</label><input type="number" id="opQty" value="1" min="0" step="1"></div>
+        <div class="form-group"><label>Коментар</label><input type="text" id="opComment" placeholder="Необов'язково"></div>
+      </div>
+      <div class="form-row-end"><button class="btn primary" onclick="addOperation()">Провести операцію</button></div>
+    </div>
+
+    <div class="toolbar">
+      <select onchange="renderOperations()" id="opTypeFilter">
+        <option value="">Усі типи</option><option value="in">Прихід</option><option value="out">Витрата</option><option value="adj">Коригування</option>
+      </select>
+      <select onchange="renderOperations()" id="opProdFilter"><option value="">Усі товари</option></select>
+    </div>
+    <div class="card">
+      <table>
+        <thead><tr><th>Дата/час</th><th>Тип</th><th>Товар</th><th>К-сть</th><th>Залишок після</th><th>Коментар</th></tr></thead>
+        <tbody id="operationsBody"></tbody>
+      </table>
+      <div class="empty" id="emptyOps" style="display:none">Операцій не знайдено</div>
+    </div>
+  </div>
+</div>
+
+<!-- Модал: товар -->
+<div class="overlay" id="productModal">
+  <div class="modal">
+    <div class="modal-hdr"><h2 id="modalTitle">Додати товар</h2><button class="close-btn" onclick="closeModal()">×</button></div>
+    <div class="form-row">
+      <div class="form-group"><label>Артикул *</label><input id="pSku" placeholder="SKU-001"></div>
+      <div class="form-group"><label>Найменування *</label><input id="pName" placeholder="Назва товару"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Категорія</label><input id="pCat" placeholder="Електроніка"></div>
+      <div class="form-group"><label>Одиниця виміру</label>
+        <select id="pUnit"><option>шт</option><option>кг</option><option>л</option><option>м</option><option>упак</option><option>ящик</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Початковий залишок</label><input type="number" id="pQty" value="0" min="0"></div>
+      <div class="form-group"><label>Мін. залишок</label><input type="number" id="pMin" value="5" min="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Ціна (₴)</label><input type="number" id="pPrice" value="0" min="0" step="0.01"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+      <button class="btn" onclick="closeModal()">Скасувати</button>
+      <button class="btn primary" onclick="saveProduct()">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'warehouse_v1';
+let db = load();
+let editId = null;
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    products: [
+      {id:1,sku:'SKU-001',name:'Ноутбук ASUS',cat:'Електроніка',unit:'шт',qty:12,minQty:3,price:28500},
+      {id:2,sku:'SKU-002',name:'Миша бездротова',cat:'Електроніка',unit:'шт',qty:2,minQty:5,price:650},
+      {id:3,sku:'SKU-003',name:'Папір А4 500арк',cat:'Канцтовари',unit:'упак',qty:0,minQty:10,price:210},
+      {id:4,sku:'SKU-004',name:'Ручки кулькові',cat:'Канцтовари',unit:'упак',qty:25,minQty:5,price:85},
+      {id:5,sku:'SKU-005',name:'Монітор 24"',cat:'Електроніка',unit:'шт',qty:4,minQty:2,price:9800},
+    ],
+    operations: [
+      {id:1,type:'in',prodId:1,qty:5,balAfter:12,comment:'Поставка червень',ts:'2025-06-10T10:00'},
+      {id:2,type:'out',prodId:2,qty:3,balAfter:2,comment:'Видача відділу',ts:'2025-06-11T14:00'},
+      {id:3,type:'out',prodId:3,qty:8,balAfter:0,comment:'Списання',ts:'2025-06-12T09:30'},
+    ],
+    nextId: 6, nextOpId: 4
+  };
+}
+
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); }
+
+function pad(n){return String(n).padStart(2,'0')}
+function fmt(ts){const d=new Date(ts);return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`}
+
+function stockStatus(p){
+  if(p.qty===0)return{key:'zero',label:'❌ Немає'};
+  if(p.qty<=p.minQty)return{key:'low',label:'⚠️ Мало'};
+  return{key:'ok',label:'✅ В наявності'};
+}
+
+function updateMetrics(){
+  document.getElementById('mTotal').textContent=db.products.length;
+  document.getElementById('mStock').textContent=db.products.reduce((s,p)=>s+p.qty,0);
+  document.getElementById('mLow').textContent=db.products.filter(p=>p.qty>0&&p.qty<=p.minQty).length;
+  document.getElementById('mZero').textContent=db.products.filter(p=>p.qty===0).length;
+}
+
+function updateCatFilter(){
+  const cats=[...new Set(db.products.map(p=>p.cat).filter(Boolean))].sort();
+  const cf=document.getElementById('catFilter');
+  const cur=cf.value;
+  cf.innerHTML='<option value="">Усі категорії</option>'+cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(cats.includes(cur))cf.value=cur;
+}
+
+function renderProducts(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  const cat=document.getElementById('catFilter').value;
+  const stk=document.getElementById('stockFilter').value;
+  let list=db.products.filter(p=>{
+    if(q&&!p.name.toLowerCase().includes(q)&&!p.sku.toLowerCase().includes(q))return false;
+    if(cat&&p.cat!==cat)return false;
+    const s=stockStatus(p).key;
+    if(stk&&s!==stk)return false;
+    return true;
+  });
+  const tbody=document.getElementById('productsBody');
+  document.getElementById('emptyProd').style.display=list.length?'none':'block';
+  tbody.innerHTML=list.map(p=>{
+    const s=stockStatus(p);
+    return `<tr>
+      <td class="sku">${p.sku}</td>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="cat">${p.cat||'—'}</span></td>
+      <td><strong>${p.qty}</strong></td>
+      <td style="color:#888">${p.unit}</td>
+      <td style="color:#888">${p.minQty}</td>
+      <td>${p.price>0?'₴'+p.price.toLocaleString('uk-UA'):'—'}</td>
+      <td><span class="badge ${s.key}">${s.label}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn sm" onclick="quickOp(${p.id},'in')" title="Прихід">↓ Прихід</button>
+        <button class="btn sm" onclick="quickOp(${p.id},'out')" title="Витрата" style="margin:0 4px">↑ Витрата</button>
+        <button class="btn sm" onclick="editProduct(${p.id})" title="Редагувати">✏️</button>
+        <button class="btn sm danger" onclick="deleteProduct(${p.id})" title="Видалити">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderOperations(){
+  const ot=document.getElementById('opTypeFilter').value;
+  const op=document.getElementById('opProdFilter').value;
+  const typeLabels={in:'Прихід',out:'Витрата',adj:'Коригування'};
+  let list=[...db.operations].reverse().filter(o=>{
+    if(ot&&o.type!==ot)return false;
+    if(op&&String(o.prodId)!==op)return false;
+    return true;
+  });
+  const tbody=document.getElementById('operationsBody');
+  document.getElementById('emptyOps').style.display=list.length?'none':'block';
+  tbody.innerHTML=list.map(o=>{
+    const p=db.products.find(x=>x.id===o.prodId);
+    const sign=o.type==='in'?'+':o.type==='out'?'−':'=';
+    return `<tr>
+      <td style="font-size:12px;color:#888">${fmt(o.ts)}</td>
+      <td><span class="badge ${o.type}">${typeLabels[o.type]}</span></td>
+      <td>${p?p.name:'[видалено]'}</td>
+      <td><strong>${sign}${o.qty}</strong> ${p?p.unit:''}</td>
+      <td>${o.balAfter} ${p?p.unit:''}</td>
+      <td style="color:#888">${o.comment||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateOpProductSelect(){
+  const sel=document.getElementById('opProduct');
+  sel.innerHTML=db.products.map(p=>`<option value="${p.id}">${p.name} (${p.qty} ${p.unit})</option>`).join('');
+  const pf=document.getElementById('opProdFilter');
+  pf.innerHTML='<option value="">Усі товари</option>'+db.products.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+}
+
+function addOperation(){
+  const type=document.getElementById('opType').value;
+  const prodId=parseInt(document.getElementById('opProduct').value);
+  const qty=parseFloat(document.getElementById('opQty').value);
+  const comment=document.getElementById('opComment').value.trim();
+  const p=db.products.find(x=>x.id===prodId);
+  if(!p||isNaN(qty)||qty<0){showAlert('Перевірте дані операції','error');return;}
+  let newQty=p.qty;
+  if(type==='in')newQty=p.qty+qty;
+  else if(type==='out'){
+    if(qty>p.qty){showAlert(`Недостатньо товару. На складі: ${p.qty} ${p.unit}`,'error');return;}
+    newQty=p.qty-qty;
+  } else newQty=qty;
+  p.qty=newQty;
+  db.operations.push({id:db.nextOpId++,type,prodId,qty,balAfter:newQty,comment,ts:new Date().toISOString()});
+  document.getElementById('opQty').value='1';
+  document.getElementById('opComment').value='';
+  save(); refresh();
+  showAlert(`Операцію проведено. Новий залишок: ${newQty} ${p.unit}`,'success');
+}
+
+function quickOp(prodId, type){
+  switchTab('operations');
+  document.getElementById('opType').value=type;
+  document.getElementById('opProduct').value=prodId;
+  document.getElementById('opQty').focus();
+}
+
+function openAddModal(){
+  editId=null;
+  document.getElementById('modalTitle').textContent='Додати товар';
+  ['pSku','pName','pCat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pQty').value='0';
+  document.getElementById('pMin').value='5';
+  document.getElementById('pPrice').value='0';
+  document.getElementById('pUnit').value='шт';
+  document.getElementById('productModal').classList.add('show');
+}
+
+function editProduct(id){
+  const p=db.products.find(x=>x.id===id);
+  if(!p)return;
+  editId=id;
+  document.getElementById('modalTitle').textContent='Редагувати товар';
+  document.getElementById('pSku').value=p.sku;
+  document.getElementById('pName').value=p.name;
+  document.getElementById('pCat').value=p.cat||'';
+  document.getElementById('pUnit').value=p.unit;
+  document.getElementById('pQty').value=p.qty;
+  document.getElementById('pMin').value=p.minQty;
+  document.getElementById('pPrice').value=p.price;
+  document.getElementById('productModal').classList.add('show');
+}
+
+function saveProduct(){
+  const sku=document.getElementById('pSku').value.trim();
+  const name=document.getElementById('pName').value.trim();
+  if(!sku||!name){showAlert('Заповніть артикул та найменування','error');return;}
+  if(!editId&&db.products.find(p=>p.sku===sku)){showAlert('Товар з таким артикулом вже існує','error');return;}
+  const qty=parseFloat(document.getElementById('pQty').value)||0;
+  const data={sku,name,cat:document.getElementById('pCat').value.trim(),unit:document.getElementById('pUnit').value,qty,minQty:parseFloat(document.getElementById('pMin').value)||0,price:parseFloat(document.getElementById('pPrice').value)||0};
+  if(editId){Object.assign(db.products.find(x=>x.id===editId),data);}
+  else{const id=db.nextId++;db.products.push({id,...data});if(qty>0)db.operations.push({id:db.nextOpId++,type:'in',prodId:id,qty,balAfter:qty,comment:'Початковий залишок',ts:new Date().toISOString()});}
+  closeModal(); save(); refresh();
+  showAlert(editId?'Товар оновлено':'Товар додано','success');
+}
+
+function deleteProduct(id){
+  if(!confirm('Видалити товар?'))return;
+  db.products=db.products.filter(p=>p.id!==id);
+  save(); refresh();
+  showAlert('Товар видалено','success');
+}
+
+function closeModal(){document.getElementById('productModal').classList.remove('show');}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('active',['products','operations'][i]===name)});
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  if(name==='operations'){updateOpProductSelect();renderOperations();}
+}
+
+function showAlert(msg,type){
+  const el=document.getElementById('alertBox');
+  el.className='alert '+type; el.textContent=msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none',3500);
+}
+
+function refresh(){updateCatFilter();updateMetrics();renderProducts();updateOpProductSelect();}
+
+document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('uk-UA',{day:'2-digit',month:'long',year:'numeric'});
+refresh();
+</script>
+</body>
+</html>
