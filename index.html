@@ -159,6 +159,8 @@ tbody tr:hover td{background:var(--bg3)}
     <button class="nav-item" onclick="showPage('stock')"><span>📦</span><span>Склад</span></button>
     <div class="nav-section">Документи</div>
     <button class="nav-item" onclick="showPage('ttn')"><span>🚚</span><span>ТТН</span></button>
+    <div class="nav-section">Система</div>
+    <button class="nav-item" onclick="showPage('settings')"><span>⚙️</span><span>Налаштування</span></button>
   </div>
   <div class="sidebar-footer">v2.0 • EnergoWheel</div>
 </nav>
@@ -351,6 +353,28 @@ tbody tr:hover td{background:var(--bg3)}
     </div>
   </div>
 
+
+  <!-- SETTINGS -->
+  <div class="page" id="page-settings">
+    <div style="max-width:560px">
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">⚙️ Реквізити ФОП / Компанії</div></div>
+        <div style="padding:18px">
+          <div class="form-row"><div class="form-group"><label>ПІБ або назва компанії *</label><input id="setName" placeholder="Петренко Іван Іванович"></div><div class="form-group"><label>ІПН / ЄДРПОУ *</label><input id="setInn" placeholder="1234567890"></div></div>
+          <div class="form-group"><label>Адреса</label><input id="setAddress" placeholder="м. Київ, вул. Промислова 12"></div>
+          <div class="form-row"><div class="form-group"><label>Телефон</label><input id="setPhone" placeholder="+380671234567"></div><div class="form-group"><label>Email</label><input id="setEmail" placeholder="info@company.ua"></div></div>
+          <div class="form-group"><label>Назва банку</label><input id="setBank" placeholder="АТ КБ ПРИВАТБАНК"></div>
+          <div class="form-group"><label>IBAN</label><input id="setIban" placeholder="UA123456789012345678901234567"></div>
+          <div class="form-group"><label>Система оподаткування</label><select id="setTaxType" onchange="updateTaxText()"><option value="fop3">ФОП 3 група ЄП, без ПДВ (5%)</option><option value="fop2">ФОП 2 група ЄП, без ПДВ</option><option value="fop3pdv">ФОП 3 група ЄП, платник ПДВ (3%)</option><option value="tov">ТОВ / загальна система</option><option value="custom">Інше (вручну)</option></select></div>
+          <div class="form-group"><label>Текст про оподаткування у рахунку</label><input id="setTax"></div>
+          <div class="form-group"><label>Підпис у рахунку</label><input id="setSignature" placeholder="ФОП Петренко І.І."></div>
+          <div style="display:flex;gap:10px;margin-top:6px"><button class="btn btn-primary" onclick="saveSettings()">💾 Зберегти</button><button class="btn btn-outline btn-sm" onclick="loadSettingsForm()">↺ Скинути</button></div>
+          <div id="settingsSaved" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(0,200,150,.1);border:1px solid rgba(0,200,150,.3);border-radius:8px;font-size:13px;color:var(--green)">✅ Збережено! Нові реквізити будуть у всіх наступних рахунках.</div>
+        </div>
+      </div>
+      <div class="table-card" style="margin-top:14px"><div class="table-header"><div class="table-title">💰 Прайс-лист</div><button class="btn btn-primary btn-sm" onclick="openPriceModal()">+ Додати</button></div><table><thead><tr><th>Назва</th><th>Тип</th><th>Ціна (₴)</th><th></th></tr></thead><tbody id="priceBody"></tbody></table></div>
+    </div>
+  </div>
   </div><!-- /content -->
 </div><!-- /main -->
 
@@ -549,6 +573,16 @@ tbody tr:hover td{background:var(--bg3)}
 </div>
 </div>
 
+
+<!-- PRICE MODAL -->
+<div class="overlay" id="priceModal">
+<div class="modal" style="width:400px">
+  <div class="modal-hdr"><div class="modal-title">Додати позицію прайсу</div><button class="close-btn" onclick="closeModal('priceModal')">×</button></div>
+  <div class="form-group"><label>Назва *</label><input id="priceName" placeholder="АКБ 48V 100Ah LiFePO4"></div>
+  <div class="form-row"><div class="form-group"><label>Тип</label><select id="priceType"><option value="akb">АКБ</option><option value="wheel">Колесо</option><option value="other">Інше</option></select></div><div class="form-group"><label>Ціна (₴) *</label><input type="number" id="priceVal" placeholder="0"></div></div>
+  <div class="form-actions"><button class="btn btn-outline" onclick="closeModal('priceModal')">Скасувати</button><button class="btn btn-primary" onclick="savePriceItem()">Додати</button></div>
+</div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1018,8 +1052,64 @@ function renderTTNLog(){
 }
 function printTTN(){const w=window.open('','_blank');w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ТТН</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:20px}</style></head><body>${document.getElementById('ttnPreview').outerHTML}<script>window.onload=function(){window.print()}<\/script></body></html>`);w.document.close();}
 
+// SETTINGS
+const TAX_TEXTS={
+  fop3:'Платник єдиного податку 3 група, ставка 5%, без ПДВ',
+  fop2:'Платник єдиного податку 2 група, без ПДВ',
+  fop3pdv:'Платник єдиного податку 3 група, платник ПДВ, ставка 3%',
+  tov:'Платник податку на прибуток на загальній системі оподаткування',
+  custom:''
+};
+function updateTaxText(){
+  const v=document.getElementById('setTaxType').value;
+  if(v!=='custom')document.getElementById('setTax').value=TAX_TEXTS[v];
+}
+function loadSettingsForm(){
+  const f=DB.fop;
+  document.getElementById('setName').value=f.name||'';
+  document.getElementById('setInn').value=f.inn||'';
+  document.getElementById('setAddress').value=f.address||'';
+  document.getElementById('setPhone').value=f.phone||'';
+  document.getElementById('setEmail').value=f.email||'';
+  document.getElementById('setBank').value=f.bank||'';
+  document.getElementById('setIban').value=f.iban||'';
+  document.getElementById('setTax').value=f.tax||'';
+  document.getElementById('setSignature').value=f.signature||('ФОП '+f.name);
+  const found=Object.entries(TAX_TEXTS).find(([k,v])=>v&&f.tax&&f.tax.includes(v.slice(0,20)));
+  document.getElementById('setTaxType').value=found?found[0]:'custom';
+}
+function saveSettings(){
+  const name=document.getElementById('setName').value.trim();
+  if(!name){toast('Вкажіть ПІБ або назву','var(--red)');return;}
+  DB.fop={name,inn:document.getElementById('setInn').value.trim(),address:document.getElementById('setAddress').value.trim(),phone:document.getElementById('setPhone').value.trim(),email:document.getElementById('setEmail').value.trim(),bank:document.getElementById('setBank').value.trim(),iban:document.getElementById('setIban').value.trim(),tax:document.getElementById('setTax').value.trim(),signature:document.getElementById('setSignature').value.trim()||('ФОП '+name)};
+  saveDB();
+  const el=document.getElementById('settingsSaved');el.style.display='block';setTimeout(()=>el.style.display='none',3000);
+}
+function openPriceModal(){document.getElementById('priceName').value='';document.getElementById('priceVal').value='';openModal('priceModal');}
+function savePriceItem(){
+  const name=document.getElementById('priceName').value.trim(),price=parseFloat(document.getElementById('priceVal').value)||0;
+  if(!name||!price){toast('Заповніть назву та ціну','var(--red)');return;}
+  DB.pricelist.push({id:Date.now(),name,price,type:document.getElementById('priceType').value});
+  closeModal('priceModal');saveDB();renderPricelist();toast('Додано до прайсу');
+}
+function renderPricelist(){
+  const tl={akb:'⚡ АКБ',wheel:'🔵 Колесо',other:'📦 Інше'};
+  document.getElementById('priceBody').innerHTML=DB.pricelist.map(p=>`<tr><td>${p.name}</td><td><span class="badge ${p.type==='akb'?'bgreen':p.type==='wheel'?'bblue':'bg'}">${tl[p.type]||p.type}</span></td><td style="font-weight:700;color:var(--accent)">₴${p.price.toLocaleString('uk')}</td><td><button class="btn btn-sm btn-danger" onclick="deletePriceItem(${p.id})">🗑</button></td></tr>`).join('');
+}
+function deletePriceItem(id){if(!confirm('Видалити?'))return;DB.pricelist=DB.pricelist.filter(p=>p.id!==id);saveDB();renderPricelist();}
+
 // INIT
 document.getElementById('todayDate').textContent=new Date().toLocaleDateString('uk-UA',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});
+const _pages={dashboard:renderDashboard,orders:renderOrders,clients:renderClients,invoices:renderInvoices,tasks:renderTasks,stock:renderStock,ttn:renderTTNPage,settings:()=>{loadSettingsForm();renderPricelist();}};
+showPage=function(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  const pg=document.getElementById('page-'+name);if(pg)pg.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+name+"'"))b.classList.add('active');});
+  const titles={dashboard:'Дашборд',orders:'Замовлення',clients:'Клієнти',invoices:'Рахунки',tasks:'Завдання виробництва',stock:'Склад',ttn:'ТТН',settings:'Налаштування'};
+  document.getElementById('pageTitle').textContent=titles[name]||name;
+  if(_pages[name])_pages[name]();
+};
 renderDashboard();
 </script>
 </body>
